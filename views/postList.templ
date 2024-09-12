@@ -1,0 +1,19 @@
+package views 
+
+import(
+	"github.com/jkulzer/foryoum/v2/models"
+)
+
+templ PostList(posts []models.RootPost) {
+  <script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzba
+ whxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
+  <h1>Posts</h1>
+	<ul>
+  for _, post := range posts {
+		<div>
+			{post.Title} {post.Op}
+    	<div>{post.Body}</div>
+		</div>
+  }
+  </ul>
+}

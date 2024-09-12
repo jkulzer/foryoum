@@ -1,0 +1,12 @@
+package views
+
+import(
+	"github.com/jkulzer/foryoum/v2/models"
+)
+
+templ Main(posts []models.RootPost) {
+	<script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
+	@NewPost()
+	<h1>Forum</h1>
+	@PostList(posts)
+}

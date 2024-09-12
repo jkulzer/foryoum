@@ -1,0 +1,20 @@
+package views
+
+templ NewPost() {
+	<script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
+	<div>
+		<h1>Go ahead, post</h1>
+		<form hx-post="/post"
+			data-hx-swap="beforeend"
+			onsubmit="event.preventDefault();"
+			>
+
+			<input id="title" name="title" type="text">
+			<br/>
+			<textarea rows="5" cols="80" id="body" name="body"></textarea>
+			<br/>
+			<button type="submit">Submit</button>
+		</form>
+	</div>
+
+}
