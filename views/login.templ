@@ -1,0 +1,31 @@
+package views
+
+import(
+	// "github.com/jkulzer/foryoum/v2/models"
+)
+
+templ Login() {
+	<script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
+	<h1> Login </h1>
+	<form hx-post="/login"
+		hx-swap="beforebegin"
+	>
+		<label for="username">Username:</label>
+		<br>
+		<input id="username" name="username" type="text">
+		<br>
+		<label for="password">Password:</label>
+		<br>
+		<input id="password" name="password" type="password">
+		<br>
+		<input type="submit" value="Login">
+	</form>
+}
+
+templ UserNameNotFound() {
+	<h1> Username not found </h1>
+}
+
+templ WrongPassword() {
+	<h1> Wrong Password </h1>
+}

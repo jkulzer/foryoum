@@ -5,6 +5,9 @@ import (
 	"time"
 )
 
+// MAKE SURE TO KEEP THE LIST OF MIGRATIONS IN `db/init.go` UP TO DATE!!!!!
+//WARNING !!!!!!!
+
 type RootPost struct {
 	gorm.Model
 	Title        string
@@ -13,4 +16,19 @@ type RootPost struct {
 	UpdateDate   time.Time
 	Op           string
 	Version      int
+}
+
+type UserAccount struct {
+	gorm.Model
+	Name     string `gorm:"unique"`
+	Password string
+	Sessions []Session
+}
+
+type Session struct {
+	gorm.Model
+	Token         string
+	UserAccountID uint // foreign key of "UserAccount"
+	UserAccount   UserAccount
+	Expiry        time.Time
 }

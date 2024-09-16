@@ -15,6 +15,5 @@ func GetPostList(length uint, env *db.Env, offset uint) []models.RootPost {
 		}
 		posts = append(posts, newPost)
 	}
-
 	return posts
 }

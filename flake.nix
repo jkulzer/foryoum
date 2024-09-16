@@ -17,6 +17,7 @@
 						templ
 						gopls
 						gnumake
+						sqlite
 					]; 
 				};
       }
