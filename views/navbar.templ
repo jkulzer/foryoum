@@ -1,0 +1,24 @@
+package views
+
+templ Navbar() {
+	<div id="navbar">
+		<a id="navbar-item" href="/">Main Page</a>
+		<a id="navbar-item" href="/register">Register</a>
+		<a id="navbar-item" href="/login">Login</a>
+		<a id="navbar-item" href="/logout">Logout</a>
+		<a id="navbar-item" href="/sessions">Sessions</a>
+	</div>
+
+	<style>
+	#navbar {
+		background-color: powderblue;
+		display: flex;
+	}
+
+	#navbar-item {
+		background-color: grey;
+		flex: 1;
+		padding: 0.2%;
+	}
+	</style>
+}

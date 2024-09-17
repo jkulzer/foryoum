@@ -6,7 +6,6 @@ import (
 	"gorm.io/gorm"
 	"net/http"
 	"net/url"
-	"strconv"
 	"time"
 
 	"github.com/jkulzer/foryoum/v2/controllers"
@@ -39,9 +38,8 @@ func Router(r chi.Router, env *db.Env) {
 			}
 
 			isLoggedIn, session := controllers.GetLoginFromSession(env, r)
-			fmt.Println("Are they logged in? " + strconv.FormatBool(isLoggedIn))
-			fmt.Println(session)
 			if isLoggedIn {
+				fmt.Println("Username: " + session.UserAccount.Name + " posted")
 
 				currentTime := time.Now()
 
@@ -50,11 +48,10 @@ func Router(r chi.Router, env *db.Env) {
 					Body:         data["body"][0],
 					CreationDate: currentTime,
 					UpdateDate:   currentTime,
-					Op:           "test",
+					Op:           session.UserAccount.Name,
 					Version:      1,
-					// Op:           userAccount.Name,
 				})
-				fmt.Println("Username: " + session.UserAccount.Name)
+				controllers.RefreshSession(env, w, r)
 			}
 		},
 	)
@@ -92,16 +89,23 @@ func Router(r chi.Router, env *db.Env) {
 				fmt.Println("Failed to hash password")
 			}
 
-			fmt.Println(data["username"][0])
-
-			result := env.DB.Create(&models.UserAccount{
+			userName := models.UserAccount{
 				Name:     data["username"][0],
 				Password: hashedPassword,
-			})
+			}
+			// tries to create the user in the db
+			result := env.DB.Create(&userName)
 
+			// if the user creation fails,
 			if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
 				fmt.Println("Duplicate Username")
 				templ.Handler(views.RegistrationFailed()).ServeHTTP(w, r)
+			} else {
+				// gets the object of the user in the db
+				var user models.UserAccount
+				env.DB.First(&userName, userName.ID)
+
+				controllers.CreateSession(env, user, w)
 			}
 		},
 	)
@@ -137,26 +141,32 @@ func Router(r chi.Router, env *db.Env) {
 				if controllers.CheckPasswordHash(
 					password, userAccount.Password,
 				) {
-					fmt.Println(userAccount)
-					sessionToken, expiryDuration := controllers.NewSession(env, userAccount)
-					// creates a session cookie
-					cookie := http.Cookie{
-						Name:  "Session",
-						Value: sessionToken,
-						Path:  "/",
-						// sets the expiry time also used in the session
-						MaxAge:   int(expiryDuration.Seconds()),
-						HttpOnly: true,
-						Secure:   true,
-						SameSite: http.SameSiteLaxMode,
-					}
-
-					http.SetCookie(w, &cookie)
+					controllers.CreateSession(env, userAccount, w)
 				} else {
 					templ.Handler(views.WrongPassword()).ServeHTTP(w, r)
 				}
 			}
 
+		},
+	)
+	r.Get("/logout",
+		func(w http.ResponseWriter, r *http.Request) {
+			isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
+			templ.Handler(views.Logout(isLoggedIn)).ServeHTTP(w, r)
+		},
+	)
+	r.Post("/logout",
+		func(w http.ResponseWriter, r *http.Request) {
+			controllers.RemoveSession(env, w, r)
+		},
+	)
+	r.Get("/sessions",
+		func(w http.ResponseWriter, r *http.Request) {
+			isLoggedIn, session := controllers.GetLoginFromSession(env, r)
+
+			sessionList := controllers.GetSessionsForUser(env, r, session)
+
+			templ.Handler(views.SessionList(isLoggedIn, sessionList)).ServeHTTP(w, r)
 		},
 	)
 }

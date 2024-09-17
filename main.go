@@ -20,6 +20,7 @@ func main() {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
+	// r.Use(routes.RefreshToken(env))
 
 	routes.Router(r, env)
 

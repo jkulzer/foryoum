@@ -1,0 +1,41 @@
+package views 
+
+import(
+	"github.com/jkulzer/foryoum/v2/models"
+)
+
+templ SessionList(isLoggedIn bool, sessions []models.Session) {
+  <script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzba
+ whxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
+ if isLoggedIn {
+  <h1>Sessions</h1>
+	<ul>
+  for _, session := range sessions {
+		<div id="session">
+			<div>
+				Created: {session.CreatedAt.String()}
+			</div>
+			<div>
+				Token: <div id="token">{session.Token}</div>
+			</div>
+		</div>
+  }
+  </ul>
+	<style>
+		#session {
+			padding: 0.2%;
+		}
+		#token {
+			display:inline;
+			filter: blur(10px);
+		}
+
+		#token:hover {
+				color: black;
+			filter: none;
+		}
+	</style>
+ } else {
+	<meta http-equiv="refresh" content="0; url=/login" />
+ }
+}

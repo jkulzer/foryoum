@@ -28,7 +28,7 @@ type UserAccount struct {
 type Session struct {
 	gorm.Model
 	Token         string
-	UserAccountID uint // foreign key of "UserAccount"
+	UserAccountID uint
 	UserAccount   UserAccount
 	Expiry        time.Time
 }
