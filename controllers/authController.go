@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/jkulzer/foryoum/v2/db"
@@ -14,8 +15,8 @@ func IsExpired(s models.Session) bool {
 	return s.Expiry.Before(time.Now())
 }
 
-func NewSession(env *db.Env, userAccount models.UserAccount) (string, time.Duration) {
-	sessionToken := uuid.NewString()
+func NewSession(env *db.Env, userAccount models.UserAccount) (uuid.UUID, time.Duration) {
+	sessionToken := uuid.New()
 	// 5 min expiry time
 	expiryDuration := 5 * time.Minute
 	expiresAt := time.Now().Add(expiryDuration)
@@ -40,13 +41,23 @@ func GetLoginFromSession(env *db.Env, r *http.Request) (bool, models.Session) {
 
 	var session models.Session
 
-	env.DB.Preload("UserAccount").Where(&models.Session{Token: cookie.Value}).First(&session)
+	sessionToken, err := uuid.Parse(cookie.Value)
+	if err != nil {
+		fmt.Println("Failed to parse UUID")
+	}
+
+	env.DB.Preload("UserAccount").Where(&models.Session{Token: sessionToken}).First(&session)
 	// checks if the token in the cookie is in any active session
-	result := env.DB.Where(&models.Session{Token: cookie.Value}).First(&session)
+	result := env.DB.Where(&models.Session{Token: sessionToken}).First(&session)
 	if result.Error != nil {
 		return false, models.Session{} // returns empty UserAccount struct
 	} else {
-		return true, session
+		if session.Expiry.After(time.Now()) {
+			return true, session
+		} else {
+			fmt.Println("Session expired")
+			return false, models.Session{}
+		}
 	}
 
 }
@@ -66,7 +77,7 @@ func CreateSession(env *db.Env, userAccount models.UserAccount, w http.ResponseW
 	// creates a session cookie
 	cookie := http.Cookie{
 		Name:  "Session",
-		Value: sessionToken,
+		Value: sessionToken.String(),
 		Path:  "/",
 		// sets the expiry time also used in the session
 		MaxAge:   int(expiryDuration.Seconds()),
@@ -114,4 +125,33 @@ func GetSessionsForUser(env *db.Env, r *http.Request, session models.Session) []
 	}
 
 	return sessionList
+}
+
+func ClearOutExpiredSessions(env *db.Env) {
+	fmt.Println("Clearing out old sessions")
+	var sessionList []models.Session
+	result := env.DB.Find(&sessionList)
+	currentTime := time.Now()
+	if result.Error != nil {
+		fmt.Println("Can't get list of sessions")
+	} else {
+		for _, session := range sessionList {
+			if session.Expiry.Before(currentTime) {
+				env.DB.Delete(&session)
+			}
+		}
+	}
+}
+
+func DeleteSessionByUuid(uuid uuid.UUID, env *db.Env, r *http.Request) error {
+	isLoggedIn, session := GetLoginFromSession(env, r)
+	if isLoggedIn {
+		var toBeDeletedSession models.Session
+		env.DB.Model(models.Session{Token: uuid, UserAccountID: session.UserAccount.ID}).First(&toBeDeletedSession)
+		fmt.Println("Will delete session " + toBeDeletedSession.Token.String())
+		env.DB.Delete(&toBeDeletedSession)
+		return nil
+	} else {
+		return errors.New("Not logged in")
+	}
 }

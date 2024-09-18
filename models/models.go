@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"time"
 )
@@ -27,7 +28,7 @@ type UserAccount struct {
 
 type Session struct {
 	gorm.Model
-	Token         string
+	Token         uuid.UUID
 	UserAccountID uint
 	UserAccount   UserAccount
 	Expiry        time.Time
