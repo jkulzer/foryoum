@@ -114,9 +114,10 @@ func Router(r chi.Router, env *db.Env) {
 		)
 	})
 	r.Route("/login", func(r chi.Router) {
-		r.Get("/",
+		r.Get("/*",
 			func(w http.ResponseWriter, r *http.Request) {
-				templ.Handler(views.Login()).ServeHTTP(w, r)
+				redirect := chi.URLParam(r, "*")
+				templ.Handler(views.Login(redirect)).ServeHTTP(w, r)
 			},
 		)
 		r.Post("/",
@@ -133,6 +134,7 @@ func Router(r chi.Router, env *db.Env) {
 
 				username := data["username"][0]
 				password := data["password"][0]
+				redirect := data["redirect"][0]
 
 				var userAccount models.UserAccount
 				result := env.DB.Where(&models.UserAccount{Name: username}).First(&userAccount)
@@ -147,6 +149,8 @@ func Router(r chi.Router, env *db.Env) {
 						password, userAccount.Password,
 					) {
 						controllers.CreateSession(env, userAccount, w)
+						fmt.Println("Redirecting to " + redirect)
+						templ.Handler(views.RedirectTo(redirect)).ServeHTTP(w, r)
 					} else {
 						templ.Handler(views.WrongPassword()).ServeHTTP(w, r)
 					}
