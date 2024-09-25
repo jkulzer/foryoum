@@ -1,9 +1,13 @@
 package models
 
 import (
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"time"
 )
+
+// MAKE SURE TO KEEP THE LIST OF MIGRATIONS IN `db/init.go` UP TO DATE!!!!!
+//WARNING !!!!!!!
 
 type RootPost struct {
 	gorm.Model
@@ -13,4 +17,19 @@ type RootPost struct {
 	UpdateDate   time.Time
 	Op           string
 	Version      int
+}
+
+type UserAccount struct {
+	gorm.Model
+	Name     string `gorm:"unique"`
+	Password string
+	Sessions []Session
+}
+
+type Session struct {
+	gorm.Model
+	Token         uuid.UUID
+	UserAccountID uint
+	UserAccount   UserAccount
+	Expiry        time.Time
 }

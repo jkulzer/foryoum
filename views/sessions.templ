@@ -1,0 +1,55 @@
+package views 
+
+import(
+	"github.com/jkulzer/foryoum/v2/models"
+	"time"
+)
+
+templ SessionList(isLoggedIn bool, sessions []models.Session) {
+	<script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
+	@Navbar()
+	if isLoggedIn {
+		<h1>Sessions</h1>
+		<ul>
+		for _, session := range sessions {
+			<div id="session">
+				<div>
+					Created: {session.CreatedAt.Format(time.RFC822)}
+				</div>
+				<div>
+					Token: <div id="token">{session.Token.String()}</div>
+				</div>
+				<div id="deleteSession">
+					<button hx-delete={"/sessions/" + session.Token.String()}
+						hx-trigger="click"
+						hx-target="#session"
+					>
+						Delete
+					</button>
+				</div>
+			</div>
+		}
+		</ul>
+		<style>
+			#session {
+				padding: 0.2%;
+			}
+
+			#token {
+				display:inline;
+				filter: blur(10px);
+			}
+
+			#token:hover {
+					color: black;
+				filter: none;
+			}
+			
+			#deleteSession {
+				display:inline;
+			}
+		</style>
+	} else {
+		<meta http-equiv="refresh" content="0; url=/login/sessions" />
+ 	}
+}

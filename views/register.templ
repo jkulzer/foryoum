@@ -1,0 +1,29 @@
+package views
+
+import(
+	// "github.com/jkulzer/foryoum/v2/models"
+)
+
+templ Register() {
+	<script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
+	@Navbar()
+
+	<h1> Register </h1>
+	<form hx-post="/register"
+		hx-swap="beforebegin"
+	>
+		<label for="username">Username:</label>
+		<br>
+		<input id="username" name="username" type="text">
+		<br>
+		<label for="password">Password:</label>
+		<br>
+		<input id="password" name="password" type="password">
+		<br>
+		<input type="submit" value="Register">
+	</form>
+}
+
+templ RegistrationFailed() {
+	<div> Failed to register </div>
+}
