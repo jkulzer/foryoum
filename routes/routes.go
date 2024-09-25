@@ -40,8 +40,6 @@ func Router(r chi.Router, env *db.Env) {
 
 			isLoggedIn, session := controllers.GetLoginFromSession(env, r)
 			if isLoggedIn {
-				fmt.Println("Username: " + session.UserAccount.Name + " posted")
-
 				currentTime := time.Now()
 
 				env.DB.Create(&models.RootPost{
@@ -104,11 +102,7 @@ func Router(r chi.Router, env *db.Env) {
 					fmt.Println("Duplicate Username")
 					templ.Handler(views.RegistrationFailed()).ServeHTTP(w, r)
 				} else {
-					// gets the object of the user in the db
-					var user models.UserAccount
-					env.DB.First(&userName, userName.ID)
-
-					controllers.CreateSession(env, user, w)
+					controllers.CreateSession(env, userName, w)
 				}
 			},
 		)
