@@ -6,8 +6,7 @@ import(
 )
 
 templ SessionList(isLoggedIn bool, sessions []models.Session) {
-  <script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzba
- whxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
+	<script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
 	@Navbar()
 	if isLoggedIn {
 		<h1>Sessions</h1>
@@ -23,6 +22,7 @@ templ SessionList(isLoggedIn bool, sessions []models.Session) {
 				<div id="deleteSession">
 					<button hx-delete={"/sessions/" + session.Token.String()}
 						hx-trigger="click"
+						hx-target="#session"
 					>
 						Delete
 					</button>
@@ -50,6 +50,6 @@ templ SessionList(isLoggedIn bool, sessions []models.Session) {
 			}
 		</style>
 	} else {
-		<meta http-equiv="refresh" content="0; url=/login" />
+		<meta http-equiv="refresh" content="0; url=/login/sessions" />
  	}
 }

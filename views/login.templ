@@ -4,7 +4,7 @@ import(
 	// "github.com/jkulzer/foryoum/v2/models"
 )
 
-templ Login() {
+templ Login(redirect string) {
 	<script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
 
 	@Navbar()
@@ -21,6 +21,7 @@ templ Login() {
 		<br>
 		<input id="password" name="password" type="password">
 		<br>
+		<input type="hidden" id="redirect" name="redirect" value={redirect}>
 		<input type="submit" value="Login">
 	</form>
 }
@@ -31,4 +32,8 @@ templ UserNameNotFound() {
 
 templ WrongPassword() {
 	<h1> Wrong Password </h1>
+}
+
+templ RedirectTo(redirect string) {
+		<meta http-equiv="refresh" content={"0; url=/"+redirect} />
 }
