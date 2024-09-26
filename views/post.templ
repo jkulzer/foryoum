@@ -1,0 +1,17 @@
+package views 
+
+import(
+	"github.com/jkulzer/foryoum/v2/models"
+)
+
+templ Post(post models.RootPost) {
+ 	@Navbar()
+	<h1>{post.Title}</h1>
+	<div>
+	{post.Body}
+	</div>
+}
+
+templ PostRedirect() {
+	<meta http-equiv="refresh" content="0; url=/posts/0"/>
+}
