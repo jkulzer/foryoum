@@ -2,18 +2,54 @@ package views
 
 import(
 	"github.com/jkulzer/foryoum/v2/models"
+	"strconv"
 )
 
-templ PostList(posts []models.RootPost) {
-  <script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzba
- whxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
+templ PostList(posts []models.RootPost, index uint64, lastPage bool, isLoggedIn bool) {
+  <script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
+ 	@Navbar()
+	@NewPost(isLoggedIn)
   <h1>Posts</h1>
 	<ul>
   for _, post := range posts {
+		<!-- 10 specifies base 10 -->
 		<div>
-			{post.Title} {post.Op}
+			<a id="link" 
+				href={ templ.URL("/post/" + strconv.FormatUint(uint64(post.ID), 10)) }
+				style="text-decoration:none"
+			>
+			{post.Title} 
+			</a>
+			{post.Op}
     	<div>{post.Body}</div>
 		</div>
   }
   </ul>
+
+	<div id="pagination">
+			if (index > 0) {
+				<a id="link-navbar" 
+					href={ templ.URL("/posts/" + strconv.FormatUint(uint64(index-1), 10))}
+					style="text-decoration:none"
+				> Previous </a>
+			}
+			if !lastPage {
+				<a id="link-navbar" 
+					href={ templ.URL("/posts/" + strconv.FormatUint(uint64(index+1), 10))}
+					style="text-decoration:none"
+				> Next </a>
+			}
+	</div>
+	<style>
+		a {
+			display: block;
+		}
+		#pagination {
+			display: flex;
+		}
+		#link-navbar {
+			flex: 1;
+			padding: 0.2%;
+		}
+	</style>
 }

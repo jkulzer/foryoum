@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/jkulzer/foryoum/v2/controllers"
@@ -21,49 +22,75 @@ import (
 
 func Router(r chi.Router, env *db.Env) {
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		posts := controllers.GetPostList(25, env, 0)
-		isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
-		templ.Handler(views.Main(posts, isLoggedIn)).ServeHTTP(w, r)
+		templ.Handler(views.Main()).ServeHTTP(w, r)
 	})
 
-	r.Post("/post",
-		func(w http.ResponseWriter, r *http.Request) {
-			response, err := helpers.ReadHttpResponse(r.Body)
-			if err != nil {
-				fmt.Println("Failed to read HTTP response")
-			}
+	r.Route("/posts", func(r chi.Router) {
+		r.Get("/{index}",
+			func(w http.ResponseWriter, r *http.Request) {
+				index, err := strconv.ParseUint(chi.URLParam(r, "index"), 10, 0)
+				if err != nil {
+					templ.Handler(views.GenericError("Invalid Post range")).ServeHTTP(w, r)
+				}
+				isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
 
-			data, err := url.ParseQuery(response)
-			if err != nil {
-				fmt.Println("Failed to parse query")
-			}
+				posts, lastPage := controllers.GetPostList(env, uint(index))
+				templ.Handler(views.PostList(posts, index, lastPage, isLoggedIn)).ServeHTTP(w, r)
+			},
+		)
+		r.Get("/",
+			func(w http.ResponseWriter, r *http.Request) {
+				templ.Handler(views.PostRedirect()).ServeHTTP(w, r)
+			},
+		)
+	})
+	r.Route("/post", func(r chi.Router) {
+		r.Post("/",
+			func(w http.ResponseWriter, r *http.Request) {
+				response, err := helpers.ReadHttpResponse(r.Body)
+				if err != nil {
+					fmt.Println("Failed to read HTTP response")
+				}
 
-			isLoggedIn, session := controllers.GetLoginFromSession(env, r)
-			if isLoggedIn {
-				currentTime := time.Now()
+				data, err := url.ParseQuery(response)
+				if err != nil {
+					fmt.Println("Failed to parse query")
+				}
 
-				env.DB.Create(&models.RootPost{
-					Title:        data["title"][0],
-					Body:         data["body"][0],
-					CreationDate: currentTime,
-					UpdateDate:   currentTime,
-					Op:           session.UserAccount.Name,
-					Version:      1,
-				})
-				// gets a new session token
-				controllers.RefreshSession(env, w, r)
-			}
-		},
-	)
+				isLoggedIn, session := controllers.GetLoginFromSession(env, r)
+				if isLoggedIn {
+					currentTime := time.Now()
 
-	r.Get("/posts",
-		func(w http.ResponseWriter, r *http.Request) {
-
-			posts := controllers.GetPostList(25, env, 0)
-
-			templ.Handler(views.PostList(posts)).ServeHTTP(w, r)
-		},
-	)
+					env.DB.Create(&models.RootPost{
+						Title:        data["title"][0],
+						Body:         data["body"][0],
+						CreationDate: currentTime,
+						UpdateDate:   currentTime,
+						Op:           session.UserAccount.Name,
+						Version:      1,
+					})
+					// gets a new session token
+					controllers.RefreshSession(env, w, r)
+				}
+			},
+		)
+		r.Get("/{postId}",
+			func(w http.ResponseWriter, r *http.Request) {
+				// 10 is base 10 and 0 indicates parsing into system-size int
+				postId, err := strconv.ParseUint(chi.URLParam(r, "postId"), 10, 0)
+				if err != nil {
+					templ.Handler(views.GenericError("Invalid Post ID")).ServeHTTP(w, r)
+				}
+				var post models.RootPost
+				result := env.DB.First(&post, postId)
+				if result.Error != nil {
+					templ.Handler(views.GenericError("Failed to load posts")).ServeHTTP(w, r)
+				} else {
+					templ.Handler(views.Post(post)).ServeHTTP(w, r)
+				}
+			},
+		)
+	})
 	r.Route("/register", func(r chi.Router) {
 		r.Get("/",
 			func(w http.ResponseWriter, r *http.Request) {
