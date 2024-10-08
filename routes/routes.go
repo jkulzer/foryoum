@@ -16,6 +16,9 @@ import (
 	"github.com/jkulzer/foryoum/v2/models"
 	"github.com/jkulzer/foryoum/v2/views"
 
+	"github.com/microcosm-cc/bluemonday"
+	"github.com/russross/blackfriday"
+
 	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
 )
@@ -97,6 +100,23 @@ func Router(r chi.Router, env *db.Env) {
 					// gets a new session token
 					controllers.RefreshSession(env, w, r)
 				}
+			},
+		)
+		r.Post("/preview",
+			func(w http.ResponseWriter, r *http.Request) {
+				response, err := helpers.ReadHttpResponse(r.Body)
+				if err != nil {
+					fmt.Println("Failed to read HTTP response")
+				}
+
+				data, err := url.ParseQuery(response)
+				if err != nil {
+					fmt.Println("Failed to parse query")
+				}
+				input := data["body"][0]
+				unsafe := blackfriday.MarkdownCommon([]byte(input))
+				html := string(bluemonday.UGCPolicy().SanitizeBytes(unsafe))
+				fmt.Fprint(w, "<div id=\"post-preview\">"+html+"</div>")
 			},
 		)
 		r.Get("/{postId}",
