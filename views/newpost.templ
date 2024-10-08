@@ -12,10 +12,31 @@ templ NewPost(isLoggedIn bool) {
 
 				<input id="title" name="title" type="text">
 				<br/>
-				<textarea rows="5" cols="80" id="body" name="body"></textarea>
+				<textarea rows="5" cols="80" id="body" name="body"
+					hx-post="/post/preview" 
+					hx-trigger="keyup changed delay:100ms" 
+					hx-target="#post-preview"
+					hx-swap="outerHTML"
+					></textarea>
 				<br/>
 				<button type="submit">Submit</button>
 			</form>
 		</div>
+
+		<h3>Preview</h3>
+		<div id="post-preview-border">
+			<div id="post-preview">
+			</div>
+		</div>
+
+		<style>
+			#post-preview-border {
+				border: 1px solid black;
+			}
+			#post-preview{
+				border: 1px solid black;
+				padding: 0.1%;
+			}
+		</style>
 	} 
 }

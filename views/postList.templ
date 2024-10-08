@@ -14,10 +14,9 @@ templ postList(posts []models.RootPost, index uint64, lastPage bool, pages bool)
 				href={ templ.URL("/post/" + strconv.FormatUint(uint64(post.ID), 10)) }
 				style="text-decoration:none"
 			>
-			{post.Title} 
+				{post.Title} 
 			</a>
-			{post.Op}
-    	<div>{post.Body}</div>
+				by user "{post.Op}"
 		</div>
   }
   </ul>
