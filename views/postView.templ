@@ -1,0 +1,13 @@
+package views 
+
+import(
+	"github.com/jkulzer/foryoum/v2/models"
+)
+
+templ PostView(posts []models.RootPost, index uint64, lastPage bool, isLoggedIn bool) {
+  <script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
+ 	@Navbar()
+	@NewPost(isLoggedIn)
+  <h1>Posts</h1>
+	@postList(posts, index, lastPage, true)
+}
