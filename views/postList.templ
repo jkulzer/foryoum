@@ -5,11 +5,7 @@ import(
 	"strconv"
 )
 
-templ PostList(posts []models.RootPost, index uint64, lastPage bool, isLoggedIn bool) {
-  <script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
- 	@Navbar()
-	@NewPost(isLoggedIn)
-  <h1>Posts</h1>
+templ postList(posts []models.RootPost, index uint64, lastPage bool, pages bool) {
 	<ul>
   for _, post := range posts {
 		<!-- 10 specifies base 10 -->
@@ -26,26 +22,30 @@ templ PostList(posts []models.RootPost, index uint64, lastPage bool, isLoggedIn 
   }
   </ul>
 
-	<div id="pagination">
-			if (index > 0) {
-				<a id="link-navbar" 
-					href={ templ.URL("/posts/" + strconv.FormatUint(uint64(index-1), 10))}
-					style="text-decoration:none"
-				> Previous </a>
-			}
-			if !lastPage {
-				<a id="link-navbar" 
-					href={ templ.URL("/posts/" + strconv.FormatUint(uint64(index+1), 10))}
-					style="text-decoration:none"
-				> Next </a>
-			}
-	</div>
+	if pages {
+		<div id="pagination">
+				if (index > 0) {
+					<a id="link-navbar" 
+						href={ templ.URL(strconv.FormatUint(uint64(index-1), 10))}
+						style="text-decoration:none"
+					> Previous </a>
+				}
+				if !lastPage {
+					<a id="link-navbar" 
+						href={ templ.URL(strconv.FormatUint(uint64(index+1), 10))}
+						style="text-decoration:none"
+					> Next </a>
+				}
+		</div>
+	}
 	<style>
 		a {
 			display: block;
 		}
-		#pagination {
-			display: flex;
+		if pages {
+			#pagination {
+				display: flex;
+			}
 		}
 		#link-navbar {
 			flex: 1;

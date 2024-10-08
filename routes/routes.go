@@ -35,12 +35,37 @@ func Router(r chi.Router, env *db.Env) {
 				isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
 
 				posts, lastPage := controllers.GetPostList(env, uint(index))
-				templ.Handler(views.PostList(posts, index, lastPage, isLoggedIn)).ServeHTTP(w, r)
+				templ.Handler(views.PostView(posts, index, lastPage, isLoggedIn)).ServeHTTP(w, r)
 			},
 		)
 		r.Get("/",
 			func(w http.ResponseWriter, r *http.Request) {
 				templ.Handler(views.PostRedirect()).ServeHTTP(w, r)
+			},
+		)
+	})
+	r.Route("/search", func(r chi.Router) {
+		r.Get("/",
+			func(w http.ResponseWriter, r *http.Request) {
+				templ.Handler(views.SearchPage()).ServeHTTP(w, r)
+			},
+		)
+		r.Post("/",
+			func(w http.ResponseWriter, r *http.Request) {
+				response, err := helpers.ReadHttpResponse(r.Body)
+				if err != nil {
+					fmt.Println("Failed to read HTTP response")
+				}
+				index := uint64(0)
+				data, err := url.ParseQuery(response)
+				if err != nil {
+					fmt.Println("Failed to parse query")
+				}
+
+				searchTerm := data["searchTerm"][0]
+				fmt.Println("searching for " + searchTerm)
+				posts, lastPage := controllers.SearchPostList(env, searchTerm)
+				templ.Handler(views.SearchResults(posts, index, lastPage)).ServeHTTP(w, r)
 			},
 		)
 	})
@@ -101,10 +126,6 @@ func Router(r chi.Router, env *db.Env) {
 		r.Post("/",
 			func(w http.ResponseWriter, r *http.Request) {
 				response, err := helpers.ReadHttpResponse(r.Body)
-				if err != nil {
-					fmt.Println("Failed to read HTTP response")
-				}
-
 				data, err := url.ParseQuery(response)
 				if err != nil {
 					fmt.Println("Failed to parse query")

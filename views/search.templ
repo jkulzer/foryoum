@@ -1,0 +1,26 @@
+package views 
+
+import(
+	"github.com/jkulzer/foryoum/v2/models"
+)
+
+templ SearchPage() {
+  <script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
+ 	@Navbar()
+  <h1>Posts</h1>
+	// @postList(posts, index, lastPage)
+	<form hx-post="/search" hx-target="#search-results" hx-swap="outerHTML">
+		<input type="text" name="searchTerm" placeholder="Search for posts..." />
+		<button type="submit">Submit</button>
+
+	</form>
+
+	<div id="search-results">
+	</div>
+}
+
+templ SearchResults(posts []models.RootPost, index uint64, lastPage bool) {
+	<div id="search-results">
+		@postList(posts, index, lastPage, false)
+	</div>
+}
