@@ -1,19 +1,19 @@
 package views 
 
-import(
+import (
 	"github.com/jkulzer/foryoum/v2/models"
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday"
 )
 
-templ Post(post models.RootPost) {
- 	@Navbar()
-	<h1>{post.Title}</h1>
+templ Post(post models.RootPost, customContent string) {
+	@CustomContent(customContent)
+	@Navbar()
+	<h1>{ post.Title }</h1>
 	<div id="post-body">
 		@templ.Raw(string(bluemonday.UGCPolicy().SanitizeBytes(blackfriday.MarkdownCommon([]byte(post.Body)))))
 	</div>
-
 	<style>
 		#post-body{
 	    word-break: break-all;

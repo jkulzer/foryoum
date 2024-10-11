@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -24,7 +25,12 @@ func main() {
 
 	r.Use(middleware.Logger)
 
-	routes.Router(r, env)
+	customContent, err := os.ReadFile("./custom.html")
+	if err != nil {
+		fmt.Println("No custom content detected.")
+	}
+
+	routes.Router(r, env, string(customContent))
 
 	http.ListenAndServe(":"+strconv.Itoa(port), r)
 

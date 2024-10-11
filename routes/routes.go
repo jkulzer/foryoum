@@ -23,9 +23,9 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func Router(r chi.Router, env *db.Env) {
+func Router(r chi.Router, env *db.Env, customContent string) {
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		templ.Handler(views.Main()).ServeHTTP(w, r)
+		templ.Handler(views.Main(customContent)).ServeHTTP(w, r)
 	})
 
 	r.Route("/posts", func(r chi.Router) {
@@ -33,12 +33,12 @@ func Router(r chi.Router, env *db.Env) {
 			func(w http.ResponseWriter, r *http.Request) {
 				index, err := strconv.ParseUint(chi.URLParam(r, "index"), 10, 0)
 				if err != nil {
-					templ.Handler(views.GenericError("Invalid Post range")).ServeHTTP(w, r)
+					templ.Handler(views.GenericError("Invalid Post range", customContent)).ServeHTTP(w, r)
 				}
 				isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
 
 				posts, lastPage := controllers.GetPostList(env, uint(index))
-				templ.Handler(views.PostView(posts, index, lastPage, isLoggedIn)).ServeHTTP(w, r)
+				templ.Handler(views.PostView(posts, index, lastPage, isLoggedIn, customContent)).ServeHTTP(w, r)
 			},
 		)
 		r.Get("/",
@@ -50,7 +50,7 @@ func Router(r chi.Router, env *db.Env) {
 	r.Route("/search", func(r chi.Router) {
 		r.Get("/",
 			func(w http.ResponseWriter, r *http.Request) {
-				templ.Handler(views.SearchPage()).ServeHTTP(w, r)
+				templ.Handler(views.SearchPage(customContent)).ServeHTTP(w, r)
 			},
 		)
 		r.Post("/",
@@ -124,14 +124,14 @@ func Router(r chi.Router, env *db.Env) {
 				// 10 is base 10 and 0 indicates parsing into system-size int
 				postId, err := strconv.ParseUint(chi.URLParam(r, "postId"), 10, 0)
 				if err != nil {
-					templ.Handler(views.GenericError("Invalid Post ID")).ServeHTTP(w, r)
+					templ.Handler(views.GenericError("Invalid Post ID", customContent)).ServeHTTP(w, r)
 				}
 				var post models.RootPost
 				result := env.DB.First(&post, postId)
 				if result.Error != nil {
-					templ.Handler(views.GenericError("Failed to load posts")).ServeHTTP(w, r)
+					templ.Handler(views.GenericError("Failed to load posts", customContent)).ServeHTTP(w, r)
 				} else {
-					templ.Handler(views.Post(post)).ServeHTTP(w, r)
+					templ.Handler(views.Post(post, customContent)).ServeHTTP(w, r)
 				}
 			},
 		)
@@ -139,7 +139,7 @@ func Router(r chi.Router, env *db.Env) {
 	r.Route("/register", func(r chi.Router) {
 		r.Get("/",
 			func(w http.ResponseWriter, r *http.Request) {
-				templ.Handler(views.Register()).ServeHTTP(w, r)
+				templ.Handler(views.Register(customContent)).ServeHTTP(w, r)
 			},
 		)
 
@@ -179,7 +179,7 @@ func Router(r chi.Router, env *db.Env) {
 		r.Get("/*",
 			func(w http.ResponseWriter, r *http.Request) {
 				redirect := chi.URLParam(r, "*")
-				templ.Handler(views.Login(redirect)).ServeHTTP(w, r)
+				templ.Handler(views.Login(redirect, customContent)).ServeHTTP(w, r)
 			},
 		)
 		r.Post("/",
@@ -225,7 +225,7 @@ func Router(r chi.Router, env *db.Env) {
 		r.Get("/",
 			func(w http.ResponseWriter, r *http.Request) {
 				isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
-				templ.Handler(views.Logout(isLoggedIn)).ServeHTTP(w, r)
+				templ.Handler(views.Logout(isLoggedIn, customContent)).ServeHTTP(w, r)
 			},
 		)
 		r.Post("/",
@@ -241,12 +241,11 @@ func Router(r chi.Router, env *db.Env) {
 
 				sessionList := controllers.GetSessionsForUser(env, r, session)
 
-				templ.Handler(views.SessionList(isLoggedIn, sessionList)).ServeHTTP(w, r)
+				templ.Handler(views.SessionList(isLoggedIn, sessionList, customContent)).ServeHTTP(w, r)
 			},
 		)
 		r.Delete("/{session}",
 			func(w http.ResponseWriter, r *http.Request) {
-				fmt.Println("Trying to delete")
 				sessionTokenString := chi.URLParam(r, "session")
 				sessionToken, err := uuid.Parse(sessionTokenString)
 				if err != nil {
