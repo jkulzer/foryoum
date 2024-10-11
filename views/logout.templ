@@ -1,12 +1,13 @@
 package views
 
-templ Logout(isLoggedIn bool) {
-		<script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
+templ Logout(isLoggedIn bool, customContent string) {
+	<script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
+	@CustomContent(customContent)
 	@Navbar()
 	if isLoggedIn {
 		<div>
 			<h1>Logout</h1>
-			<form hx-post="/logout" >
+			<form hx-post="/logout">
 				<button type="submit">Logout</button>
 			</form>
 		</div>

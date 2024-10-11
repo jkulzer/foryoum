@@ -26,9 +26,6 @@ func NewSession(env *db.Env, userAccount models.UserAccount) (uuid.UUID, time.Du
 		UserAccountID: userAccount.ID,
 		Expiry:        expiresAt,
 	})
-
-	fmt.Println(userAccount.Name)
-
 	return sessionToken, expiryDuration
 }
 
