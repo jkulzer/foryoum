@@ -12,7 +12,7 @@ type Env struct {
 
 func Init() *Env {
 	db, err := gorm.Open(
-		sqlite.Open("test.db"),
+		sqlite.Open("sqlite.db"),
 		&gorm.Config{
 			TranslateError: true,
 		},
@@ -22,6 +22,7 @@ func Init() *Env {
 	}
 	// create tables for all structs
 	db.AutoMigrate(&models.RootPost{})
+	db.AutoMigrate(&models.Comment{})
 	db.AutoMigrate(&models.UserAccount{})
 	db.AutoMigrate(&models.Session{})
 

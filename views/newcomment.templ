@@ -1,0 +1,33 @@
+package views
+
+import (
+	"fmt"
+)
+
+templ newComment(isLoggedIn bool, postID uint) {
+	<script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
+	if isLoggedIn {
+		<div>
+			<h1>Contribute to the discussion!</h1>
+			<form
+				hx-post="/comment"
+				data-hx-swap="beforeend"
+				onsubmit="event.preventDefault();"
+			>
+				<textarea
+					rows="3"
+					cols="50"
+					id="text"
+					name="text"
+				></textarea>
+				<br/>
+				<input type="hidden" id="rootPostID" name="rootPostID" value={ fmt.Sprint(postID) }/>
+				<button type="submit">Comment!</button>
+			</form>
+		</div>
+	} else {
+		<div>
+			If you want to leave a comment, <a href="/register">register</a> or <a href={ "/login/post/" + templ.SafeURL(fmt.Sprint(postID)) }>login</a>
+		</div>
+	}
+}

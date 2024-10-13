@@ -126,12 +126,63 @@ func Router(r chi.Router, env *db.Env, customContent string) {
 				if err != nil {
 					templ.Handler(views.GenericError("Invalid Post ID", customContent)).ServeHTTP(w, r)
 				}
+				templ.Handler(views.RedirectTo("post/"+fmt.Sprint(postId)+"/0")).ServeHTTP(w, r)
+			},
+		)
+		r.Get("/{postId}/{commentIndex}",
+			func(w http.ResponseWriter, r *http.Request) {
+				// 10 is base 10 and 0 indicates parsing into system-size int
+				postId, err := strconv.ParseUint(chi.URLParam(r, "postId"), 10, 0)
+				if err != nil {
+					templ.Handler(views.GenericError("Invalid Post ID", customContent)).ServeHTTP(w, r)
+				}
+
 				var post models.RootPost
 				result := env.DB.First(&post, postId)
 				if result.Error != nil {
 					templ.Handler(views.GenericError("Failed to load posts", customContent)).ServeHTTP(w, r)
 				} else {
-					templ.Handler(views.Post(post, customContent)).ServeHTTP(w, r)
+
+					comments := controllers.GetCommentList(env, uint(postId))
+					isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
+					templ.Handler(views.Post(post, comments, customContent, isLoggedIn)).ServeHTTP(w, r)
+				}
+			},
+		)
+	})
+	r.Route("/comment", func(r chi.Router) {
+		r.Post("/",
+			func(w http.ResponseWriter, r *http.Request) {
+				response, err := helpers.ReadHttpResponse(r.Body)
+				if err != nil {
+					fmt.Println("Failed to read HTTP response")
+				}
+
+				data, err := url.ParseQuery(response)
+				if err != nil {
+					fmt.Println("Failed to parse query")
+				}
+
+				isLoggedIn, session := controllers.GetLoginFromSession(env, r)
+				if isLoggedIn {
+					currentTime := time.Now()
+
+					postId, err := strconv.ParseUint(data["rootPostID"][0], 10, 0)
+					if err != nil {
+						templ.Handler(views.GenericError("Invalid Post ID", customContent)).ServeHTTP(w, r)
+					}
+
+					fmt.Println("Creating a comment with root post id \"" + fmt.Sprint(postId) + "\" and body \"" + data["text"][0])
+					env.DB.Create(&models.Comment{
+						RootPostID:   uint(postId),
+						Body:         data["text"][0],
+						CreationDate: currentTime,
+						UpdateDate:   currentTime,
+						Op:           session.UserAccount.Name,
+						Version:      1,
+					})
+					// gets a new session token
+					controllers.RefreshSession(env, w, r)
 				}
 			},
 		)
