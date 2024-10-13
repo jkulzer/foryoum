@@ -1,0 +1,16 @@
+package views 
+
+import (
+	"github.com/jkulzer/foryoum/v2/models"
+)
+
+templ commentList(comments []models.Comment) {
+	<ul>
+		for _, comment := range comments {
+			<div>
+				{ comment.Body }
+				by user "{ comment.Op }"
+			</div>
+		}
+	</ul>
+}

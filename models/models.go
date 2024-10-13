@@ -19,6 +19,17 @@ type RootPost struct {
 	Version      int
 }
 
+type Comment struct {
+	gorm.Model
+	RootPostID   uint
+	RootPost     RootPost
+	Body         string
+	CreationDate time.Time
+	UpdateDate   time.Time
+	Op           string
+	Version      int
+}
+
 type UserAccount struct {
 	gorm.Model
 	Name     string `gorm:"unique"`

@@ -30,3 +30,9 @@ func SearchPostList(env *db.Env, searchTerm string) ([]models.RootPost, bool) {
 	}
 	return posts, false
 }
+
+func GetCommentList(env *db.Env, postID uint) []models.Comment {
+	var comments []models.Comment
+	env.DB.Where("root_post_id = ?", postID).Find(&comments)
+	return comments
+}

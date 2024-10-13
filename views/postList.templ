@@ -1,40 +1,42 @@
 package views 
 
-import(
+import (
 	"github.com/jkulzer/foryoum/v2/models"
 	"strconv"
 )
 
 templ postList(posts []models.RootPost, index uint64, lastPage bool, pages bool) {
 	<ul>
-  for _, post := range posts {
-		<!-- 10 specifies base 10 -->
-		<div>
-			<a id="link" 
-				href={ templ.URL("/post/" + strconv.FormatUint(uint64(post.ID), 10)) }
-				style="text-decoration:none"
-			>
-				{post.Title} 
-			</a>
-				by user "{post.Op}"
-		</div>
-  }
-  </ul>
-
+		for _, post := range posts {
+			<!-- 10 specifies base 10 -->
+			<div>
+				<a
+					id="link"
+					href={ templ.URL("/post/" + strconv.FormatUint(uint64(post.ID), 10)) }
+					style="text-decoration:none"
+				>
+					{ post.Title }
+				</a>
+				by user "{ post.Op }"
+			</div>
+		}
+	</ul>
 	if pages {
 		<div id="pagination">
-				if (index > 0) {
-					<a id="link-navbar" 
-						href={ templ.URL(strconv.FormatUint(uint64(index-1), 10))}
-						style="text-decoration:none"
-					> Previous </a>
-				}
-				if !lastPage {
-					<a id="link-navbar" 
-						href={ templ.URL(strconv.FormatUint(uint64(index+1), 10))}
-						style="text-decoration:none"
-					> Next </a>
-				}
+			if (index > 0) {
+				<a
+					id="link-navbar"
+					href={ templ.URL(strconv.FormatUint(uint64(index-1), 10)) }
+					style="text-decoration:none"
+				>Previous </a>
+			}
+			if !lastPage {
+				<a
+					id="link-navbar"
+					href={ templ.URL(strconv.FormatUint(uint64(index+1), 10)) }
+					style="text-decoration:none"
+				>Next </a>
+			}
 		</div>
 	}
 	<style>
