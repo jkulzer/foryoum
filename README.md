@@ -1,5 +1,9 @@
 # Setup/Installation
 
+## Unterstützte Systeme
+
+Lediglich Linux-Systeme werden offiziel unterstützt (dies umfasst auch WSL). Deshalb werden auch nur Linux-Builds bereitgestellt. Die Software sollte jedoch cross-platform sein, dies wurde jedoch nicht getestet.
+
 ## Benötigte Software
 
 ### Go Compiler
@@ -37,6 +41,8 @@ Die Datei `./custom.html` wird auf jeder Seite ganz oben angezeigt. Dies ist vor
 Anhänge werden in `./attachments` gespeichert.
 
 # Entwickeln
+
+Nur für Entwickler notwendig.
 
 Folgende Befehle ausführen um das Programm neu zu kompilieren und auszuführen:
 
