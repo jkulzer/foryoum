@@ -6,18 +6,21 @@ import (
 )
 
 templ commentList(comments []models.Comment, t translations.Translations) {
-	<ul>
-		for _, comment := range comments {
-			<div id="comment">
-				{ t.User + " " + comment.Op + " " + t.Says +":" }
-				"{ comment.Body }"
-			</div>
-			<br/>
-		}
-	</ul>
-	<style>
+	if len(comments) > 0 {
+		<h3>{ t.Comments }:</h3>
+		<ul>
+			for _, comment := range comments {
+				<div id="comment">
+					{ t.User + " " + comment.Op + " " + t.Says +":" }
+					"{ comment.Body }"
+				</div>
+				<br/>
+			}
+		</ul>
+		<style>
 	#comment {
 		word-wrap: break-word;
 	}
 	</style>
+	}
 }

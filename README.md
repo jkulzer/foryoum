@@ -29,8 +29,11 @@ go build .
 ## Konfiguration
 
 Die Datenbank wird in `./sqlite.db` gespeichert. 
+</br>
 Der Administrator kann in `./mainPage.html` den Inhalt der Startseite beliebig gestalten.
+</br>
 Die Datei `./custom.html` wird auf jeder Seite ganz oben angezeigt. Dies ist vor allem für custom CSS des Administrators vorgesehen. Vorinstalliert ist ein einfaches CSS-Theme, dies kann jedoch komplett ersetzt oder angepasst werden.
+</br>
 Anhänge werden in `./attachments` gespeichert.
 
 # Entwickeln

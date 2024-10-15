@@ -5,10 +5,10 @@ import (
 	"github.com/jkulzer/foryoum/v2/translations"
 )
 
-templ PostView(posts []models.RootPost, index uint64, lastPage bool, isLoggedIn bool, customContent string, t translations.Translations) {
+templ PostView(posts []models.RootPost, index uint64, lastPage bool, isLoggedIn bool, customContent string, t translations.Translations, lang string) {
 	<script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
 	@CustomContent(customContent)
-	@Navbar(t, isLoggedIn)
+	@Navbar(t, lang, isLoggedIn)
 	@NewPost(isLoggedIn, t)
 	<h1>{ t.Posts }</h1>
 	@postList(posts, index, lastPage, true, t)

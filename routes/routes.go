@@ -28,9 +28,10 @@ import (
 
 func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+		lang := translations.GetLanguageFromCookie(r)
+		t := translations.GetTranslations(lang)
 		isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
-		templ.Handler(views.Main(mainPage, customContent, t, isLoggedIn)).ServeHTTP(w, r)
+		templ.Handler(views.Main(mainPage, customContent, t, lang, isLoggedIn)).ServeHTTP(w, r)
 	})
 	r.Route("/posts", func(r chi.Router) {
 		r.Get("/{index}",
@@ -38,13 +39,15 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 				index, err := strconv.ParseUint(chi.URLParam(r, "index"), 10, 0)
 				isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
 				if err != nil {
-					t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
-					templ.Handler(views.GenericError(t.InvalidPostRange, customContent, t, isLoggedIn)).ServeHTTP(w, r)
+					lang := translations.GetLanguageFromCookie(r)
+					t := translations.GetTranslations(lang)
+					templ.Handler(views.GenericError(t.InvalidPostRange, customContent, t, lang, isLoggedIn)).ServeHTTP(w, r)
 				}
 
 				posts, lastPage := controllers.GetPostList(env, uint(index))
-				t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
-				templ.Handler(views.PostView(posts, index, lastPage, isLoggedIn, customContent, t)).ServeHTTP(w, r)
+				lang := translations.GetLanguageFromCookie(r)
+				t := translations.GetTranslations(lang)
+				templ.Handler(views.PostView(posts, index, lastPage, isLoggedIn, customContent, t, lang)).ServeHTTP(w, r)
 			},
 		)
 		r.Get("/",
@@ -92,9 +95,10 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 	r.Route("/search", func(r chi.Router) {
 		r.Get("/",
 			func(w http.ResponseWriter, r *http.Request) {
-				t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+				lang := translations.GetLanguageFromCookie(r)
+				t := translations.GetTranslations(lang)
 				isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
-				templ.Handler(views.SearchPage(customContent, t, isLoggedIn)).ServeHTTP(w, r)
+				templ.Handler(views.SearchPage(customContent, t, lang, isLoggedIn)).ServeHTTP(w, r)
 			},
 		)
 		r.Get("/{searchTerm}/{index}",
@@ -104,12 +108,14 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 				index, err := strconv.ParseUint(chi.URLParam(r, "index"), 10, 0)
 				if err != nil {
 					fmt.Println("failed parsing")
-					t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
-					templ.Handler(views.GenericError(t.InvalidSearchRange, customContent, t, isLoggedIn)).ServeHTTP(w, r)
+					lang := translations.GetLanguageFromCookie(r)
+					t := translations.GetTranslations(lang)
+					templ.Handler(views.GenericError(t.InvalidSearchRange, customContent, t, lang, isLoggedIn)).ServeHTTP(w, r)
 				}
 				posts, lastPage := controllers.SearchPostList(env, searchTerm, uint(index))
-				t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
-				templ.Handler(views.SearchResults(posts, index, lastPage, customContent, t, isLoggedIn)).ServeHTTP(w, r)
+				lang := translations.GetLanguageFromCookie(r)
+				t := translations.GetTranslations(lang)
+				templ.Handler(views.SearchResults(posts, index, lastPage, customContent, t, lang, isLoggedIn)).ServeHTTP(w, r)
 			},
 		)
 		r.Post("/",
@@ -132,9 +138,10 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 		func(w http.ResponseWriter, r *http.Request) {
 			postID, err := strconv.ParseUint(chi.URLParam(r, "postID"), 10, 0)
 			if err != nil {
-				t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+				lang := translations.GetLanguageFromCookie(r)
+				t := translations.GetTranslations(lang)
 				isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
-				templ.Handler(views.GenericError(t.InvalidAttachmentLocation+fmt.Sprint(postID), customContent, t, isLoggedIn)).ServeHTTP(w, r)
+				templ.Handler(views.GenericError(t.InvalidAttachmentLocation+fmt.Sprint(postID), customContent, t, lang, isLoggedIn)).ServeHTTP(w, r)
 			}
 			fileName := chi.URLParam(r, "fileName")
 
@@ -222,6 +229,7 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 					controllers.RefreshSession(env, w, r)
 
 					t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+					w.Header().Set("HX-Refresh", "true")
 					templ.Handler(views.Message(t.PostedSucessfully)).ServeHTTP(w, r)
 				}
 			},
@@ -247,9 +255,10 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 				// 10 is base 10 and 0 indicates parsing into system-size int
 				postId, err := strconv.ParseUint(chi.URLParam(r, "postId"), 10, 0)
 				if err != nil {
-					t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+					lang := translations.GetLanguageFromCookie(r)
+					t := translations.GetTranslations(lang)
 					isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
-					templ.Handler(views.GenericError(t.InvalidPostID, customContent, t, isLoggedIn)).ServeHTTP(w, r)
+					templ.Handler(views.GenericError(t.InvalidPostID, customContent, t, lang, isLoggedIn)).ServeHTTP(w, r)
 				}
 				templ.Handler(views.RedirectTo("post/"+fmt.Sprint(postId)+"/0")).ServeHTTP(w, r)
 			},
@@ -260,21 +269,22 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 				// 10 is base 10 and 0 indicates parsing into system-size int
 				postId, err := strconv.ParseUint(chi.URLParam(r, "postId"), 10, 0)
 				if err != nil {
-					t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
-					templ.Handler(views.GenericError(t.InvalidPostID, customContent, t, isLoggedIn)).ServeHTTP(w, r)
+					lang := translations.GetLanguageFromCookie(r)
+					t := translations.GetTranslations(lang)
+					templ.Handler(views.GenericError(t.InvalidPostID, customContent, t, lang, isLoggedIn)).ServeHTTP(w, r)
 				}
 
 				var post models.RootPost
 				result := env.DB.First(&post, postId)
+				lang := translations.GetLanguageFromCookie(r)
+				t := translations.GetTranslations(lang)
 				if result.Error != nil {
-					t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
-					templ.Handler(views.GenericError(t.FailedToLoadPosts, customContent, t, isLoggedIn)).ServeHTTP(w, r)
+					templ.Handler(views.GenericError(t.FailedToLoadPosts, customContent, t, lang, isLoggedIn)).ServeHTTP(w, r)
 				} else {
 					comments := controllers.GetCommentList(env, uint(postId))
 					attachments := controllers.GetAttachmentList(env, uint(postId))
 					isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
-					t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
-					templ.Handler(views.Post(post, comments, attachments, customContent, isLoggedIn, t)).ServeHTTP(w, r)
+					templ.Handler(views.Post(post, comments, attachments, customContent, isLoggedIn, t, lang)).ServeHTTP(w, r)
 				}
 			},
 		)
@@ -286,6 +296,8 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 				if err != nil {
 					fmt.Println("Failed to read HTTP response")
 				}
+				lang := translations.GetLanguageFromCookie(r)
+				t := translations.GetTranslations(lang)
 
 				data, err := url.ParseQuery(response)
 				if err != nil {
@@ -298,8 +310,7 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 
 					postId, err := strconv.ParseUint(data["rootPostID"][0], 10, 0)
 					if err != nil {
-						t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
-						templ.Handler(views.GenericError(t.InvalidPostID, customContent, t, isLoggedIn)).ServeHTTP(w, r)
+						templ.Handler(views.GenericError(t.InvalidPostID, customContent, t, lang, isLoggedIn)).ServeHTTP(w, r)
 					}
 
 					fmt.Println("Creating a comment with root post id \"" + fmt.Sprint(postId) + "\" and body \"" + data["text"][0])
@@ -312,6 +323,8 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 					})
 					// gets a new session token
 					controllers.RefreshSession(env, w, r)
+					w.Header().Set("HX-Refresh", "true")
+					w.WriteHeader(http.StatusNoContent)
 				}
 			},
 		)
@@ -320,8 +333,9 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 		r.Get("/",
 			func(w http.ResponseWriter, r *http.Request) {
 				isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
-				t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
-				templ.Handler(views.Register(customContent, t, isLoggedIn)).ServeHTTP(w, r)
+				lang := translations.GetLanguageFromCookie(r)
+				t := translations.GetTranslations(lang)
+				templ.Handler(views.Register(customContent, t, lang, isLoggedIn)).ServeHTTP(w, r)
 			},
 		)
 
@@ -350,9 +364,10 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 				// if the user creation fails,
 				if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
 					fmt.Println("Duplicate Username")
-					t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+					lang := translations.GetLanguageFromCookie(r)
+					t := translations.GetTranslations(lang)
 					isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
-					templ.Handler(views.GenericError(t.UsernameAlreadyTaken, customContent, t, isLoggedIn)).ServeHTTP(w, r)
+					templ.Handler(views.GenericError(t.UsernameAlreadyTaken, customContent, t, lang, isLoggedIn)).ServeHTTP(w, r)
 				} else {
 					controllers.CreateSession(env, userName, w)
 				}
@@ -363,9 +378,10 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 		r.Get("/*",
 			func(w http.ResponseWriter, r *http.Request) {
 				redirect := chi.URLParam(r, "*")
-				t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+				lang := translations.GetLanguageFromCookie(r)
+				t := translations.GetTranslations(lang)
 				isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
-				templ.Handler(views.Login(redirect, customContent, t, isLoggedIn)).ServeHTTP(w, r)
+				templ.Handler(views.Login(redirect, customContent, t, lang, isLoggedIn)).ServeHTTP(w, r)
 			},
 		)
 		r.Post("/",
@@ -410,15 +426,15 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 		r.Get("/",
 			func(w http.ResponseWriter, r *http.Request) {
 				isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
-				t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
-				templ.Handler(views.Logout(isLoggedIn, customContent, t)).ServeHTTP(w, r)
+				lang := translations.GetLanguageFromCookie(r)
+				t := translations.GetTranslations(lang)
+				templ.Handler(views.Logout(isLoggedIn, customContent, t, lang)).ServeHTTP(w, r)
 			},
 		)
 		r.Post("/",
 			func(w http.ResponseWriter, r *http.Request) {
 				controllers.RemoveSession(env, w, r)
-				w.Header().Set("HX-Refresh", "true")
-				w.WriteHeader(http.StatusNoContent)
+				templ.Handler(views.RedirectTo("posts")).ServeHTTP(w, r)
 			},
 		)
 	})
@@ -429,8 +445,9 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 
 				sessionList := controllers.GetSessionsForUser(env, r, session)
 
-				t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
-				templ.Handler(views.SessionList(isLoggedIn, sessionList, customContent, t)).ServeHTTP(w, r)
+				lang := translations.GetLanguageFromCookie(r)
+				t := translations.GetTranslations(lang)
+				templ.Handler(views.SessionList(isLoggedIn, sessionList, customContent, t, lang)).ServeHTTP(w, r)
 			},
 		)
 		r.Delete("/{session}",

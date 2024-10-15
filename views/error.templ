@@ -4,8 +4,8 @@ import (
 	"github.com/jkulzer/foryoum/v2/translations"
 )
 
-templ GenericError(message string, customContent string, t translations.Translations, isLoggedIn bool) {
+templ GenericError(message string, customContent string, t translations.Translations, lang string, isLoggedIn bool) {
 	@CustomContent(customContent)
-	@Navbar(t, isLoggedIn)
+	@Navbar(t, lang, isLoggedIn)
 	<h1>{ message } </h1>
 }

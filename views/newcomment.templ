@@ -9,7 +9,7 @@ templ newComment(isLoggedIn bool, postID uint, t translations.Translations) {
 	<script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
 	if isLoggedIn {
 		<div>
-			<h1>{ t.CommentingMessage }</h1>
+			<h4>{ t.CommentingMessage }</h4>
 			<form
 				hx-post="/comment"
 				data-hx-swap="beforeend"
@@ -20,6 +20,7 @@ templ newComment(isLoggedIn bool, postID uint, t translations.Translations) {
 					cols="50"
 					id="text"
 					name="text"
+					placeholder={ t.CommentPlaceholder }
 				></textarea>
 				<br/>
 				<input type="hidden" id="rootPostID" name="rootPostID" value={ fmt.Sprint(postID) }/>

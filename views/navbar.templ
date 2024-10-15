@@ -4,7 +4,7 @@ import (
 	"github.com/jkulzer/foryoum/v2/translations"
 )
 
-templ Navbar(t translations.Translations, isLoggedIn bool) {
+templ Navbar(t translations.Translations, lang string, isLoggedIn bool) {
 	<div id="navbar" class="sidenav">
 		<a id="navbar-item" class="button" href="/">{ t.MainPage }</a>
 		<br/>
@@ -24,9 +24,23 @@ templ Navbar(t translations.Translations, isLoggedIn bool) {
 			<br/>
 		}
 		<form id="navbar-item">
-			<select id="language" name="language" hx-post="/language" hx-swap="none">
-				<option value="EN">English</option>
-				<option value="DE">Deutsch</option>
+			<select
+				id="language"
+				name="language"
+				value={ lang }
+				hx-post="/language"
+				hx-swap="none"
+			>
+				if lang == "EN" {
+					<option value="EN" selected="selected">English</option>
+				} else {
+					<option value="EN" selected="selected">English</option>
+				}
+				if lang == "DE" {
+					<option value="DE" selected="selected">Deutsch</option>
+				} else {
+					<option value="DE">Deutsch</option>
+				}
 			</select>
 		</form>
 	</div>

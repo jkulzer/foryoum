@@ -4,10 +4,10 @@ import (
 	"github.com/jkulzer/foryoum/v2/translations"
 )
 
-templ Logout(isLoggedIn bool, customContent string, t translations.Translations) {
+templ Logout(isLoggedIn bool, customContent string, t translations.Translations, lang string) {
 	<script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
 	@CustomContent(customContent)
-	@Navbar(t, isLoggedIn)
+	@Navbar(t, lang, isLoggedIn)
 	if isLoggedIn {
 		<div>
 			<h1>{ t.Logout }</h1>

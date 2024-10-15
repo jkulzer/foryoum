@@ -47,6 +47,8 @@ type Translations struct {
 	FailedToLoadPosts         string
 	UsernameAlreadyTaken      string
 	Content                   string
+	CommentPlaceholder        string
+	Comments                  string
 }
 
 var translations = map[string]Translations{
@@ -92,7 +94,9 @@ var translations = map[string]Translations{
 		PostedSucessfully:         "Posted sucessfully!",
 		FailedToLoadPosts:         "Failed to load posts",
 		UsernameAlreadyTaken:      "Username already taken",
-		Content:                   "Content",
+		Content:                   "Put your post content here! \nThis box accepts Markdown-formatted text!",
+		CommentPlaceholder:        "Write your comment here!",
+		Comments:                  "Comments",
 	},
 	"DE": {
 		MainPage:                  "Startseite",
@@ -136,7 +140,9 @@ var translations = map[string]Translations{
 		PostedSucessfully:         "Erstellung des Beitrags erfolgreich!",
 		FailedToLoadPosts:         "Laden der Beiträge fehlgeschlagen",
 		UsernameAlreadyTaken:      "Benutzername existiert schon",
-		Content:                   "Inhalt",
+		Content:                   "Schreibe hier deinen Inhalt! \nHier wird mit Markdown formatierter Text unterstützt!",
+		CommentPlaceholder:        "Schreibe hier deinen Kommentar!",
+		Comments:                  "Kommentare",
 	},
 }
 

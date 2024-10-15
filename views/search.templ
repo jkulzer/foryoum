@@ -5,10 +5,10 @@ import (
 	"github.com/jkulzer/foryoum/v2/translations"
 )
 
-templ SearchPage(customContent string, t translations.Translations, isLoggedIn bool) {
+templ SearchPage(customContent string, t translations.Translations, lang string, isLoggedIn bool) {
 	<script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
 	@CustomContent(customContent)
-	@Navbar(t, isLoggedIn)
+	@Navbar(t, lang, isLoggedIn)
 	@searchBar(t)
 }
 
@@ -20,9 +20,9 @@ templ searchBar(t translations.Translations) {
 	</form>
 }
 
-templ SearchResults(posts []models.RootPost, index uint64, lastPage bool, customContent string, t translations.Translations, isLoggedIn bool) {
+templ SearchResults(posts []models.RootPost, index uint64, lastPage bool, customContent string, t translations.Translations, lang string, isLoggedIn bool) {
 	@CustomContent(customContent)
-	@Navbar(t, isLoggedIn)
+	@Navbar(t, lang, isLoggedIn)
 	<h1>{ t.Search }</h1>
 	<div id="search-results">
 		@postList(posts, index, lastPage, true, t)
