@@ -8,17 +8,22 @@ templ SearchPage(customContent string) {
 	<script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
 	@CustomContent(customContent)
 	@Navbar()
-	<h1>Posts</h1>
-	// @postList(posts, index, lastPage)
-	<form hx-post="/search" hx-target="#search-results" hx-swap="outerHTML">
-		<input type="text" name="searchTerm" placeholder="Search for posts..."/>
-		<button type="submit">Submit</button>
-	</form>
-	<div id="search-results"></div>
+	@searchBar()
 }
 
-templ SearchResults(posts []models.RootPost, index uint64, lastPage bool) {
+templ searchBar() {
+	<h3>Search</h3>
+	<form hx-post="/search">
+		<input type="text" name="searchTerm" placeholder="Search for posts..."/>
+		<button type="submit" name="submit">Search</button>
+	</form>
+}
+
+templ SearchResults(posts []models.RootPost, index uint64, lastPage bool, customContent string) {
+	@CustomContent(customContent)
+	@Navbar()
+	<h1>Search</h1>
 	<div id="search-results">
-		@postList(posts, index, lastPage, false)
+		@postList(posts, index, lastPage, true)
 	</div>
 }

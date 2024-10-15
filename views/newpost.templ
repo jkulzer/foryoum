@@ -7,10 +7,10 @@ templ NewPost(isLoggedIn bool) {
 			<h1>Go ahead, post</h1>
 			<form
 				hx-post="/post"
-				data-hx-swap="beforeend"
-				onsubmit="event.preventDefault();"
+				hx-swap="afterbegin"
+				hx-encoding="multipart/form-data"
 			>
-				<input id="title" name="title" type="text"/>
+				<input id="title" name="title" type="text" placeholder="Title"/>
 				<br/>
 				<textarea
 					rows="5"
@@ -18,12 +18,16 @@ templ NewPost(isLoggedIn bool) {
 					id="body"
 					name="body"
 					hx-post="/post/preview"
-					hx-trigger="keyup changed delay:100ms"
+					hx-trigger="keyup changed delay:500ms"
 					hx-target="#post-preview"
 					hx-swap="outerHTML"
+					placeholder="Content"
 				></textarea>
 				<br/>
-				<button type="submit">Submit</button>
+				<input type="file" id="attachments" name="attachments" multiple/>
+				(filesize limit of 10MB)
+				<br/>
+				<button type="Post">Submit</button>
 			</form>
 		</div>
 		<h3>Preview</h3>

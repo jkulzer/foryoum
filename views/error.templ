@@ -1,8 +1,7 @@
 package views
 
 templ GenericError(message string, customContent string) {
-	<script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
 	@CustomContent(customContent)
+	@Navbar()
 	<h1>{ message } </h1>
-	<a href="/posts">Return to posts</a>
 }

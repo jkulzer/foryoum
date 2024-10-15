@@ -18,7 +18,7 @@ func IsExpired(s models.Session) bool {
 func NewSession(env *db.Env, userAccount models.UserAccount) (uuid.UUID, time.Duration) {
 	sessionToken := uuid.New()
 	// 5 min expiry time
-	expiryDuration := 5 * time.Minute
+	expiryDuration := 12 * time.Hour
 	expiresAt := time.Now().Add(expiryDuration)
 
 	env.DB.Create(&models.Session{
@@ -32,7 +32,6 @@ func NewSession(env *db.Env, userAccount models.UserAccount) (uuid.UUID, time.Du
 func GetLoginFromSession(env *db.Env, r *http.Request) (bool, models.Session) {
 	cookie, err := r.Cookie("Session")
 	if err != nil {
-		fmt.Println("Failed to read cookie")
 		return false, models.Session{} // returns empty UserAccount struct
 	}
 

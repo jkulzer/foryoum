@@ -1,26 +1,47 @@
 package views
 
 templ Navbar() {
-	<div id="navbar">
-		<a id="navbar-item" href="/">Main Page</a>
-		<a id="navbar-item" href="/posts/0">Posts</a>
-		<a id="navbar-item" href="/search">Search</a>
-		<a id="navbar-item" href="/register">Register</a>
-		<a id="navbar-item" href="/login">Login</a>
-		<a id="navbar-item" href="/logout">Logout</a>
-		<a id="navbar-item" href="/sessions">Sessions</a>
+	<div id="navbar" class="sidenav">
+		<a id="navbar-item" class="button" href="/">Main Page</a>
+		<br/>
+		<a id="navbar-item" class="button" href="/posts/0">Posts</a>
+		<br/>
+		<a id="navbar-item" class="button" href="/search">Search</a>
+		<br/>
+		<a id="navbar-item" class="button" href="/register">Register</a>
+		<br/>
+		<a id="navbar-item" class="button" href="/login">Login</a>
+		<br/>
+		<a id="navbar-item" class="button" href="/logout">Logout</a>
+		<br/>
+		<a id="navbar-item" class="button" href="/sessions">Sessions</a>
 	</div>
-
 	<style>
 	#navbar {
-		background-color: powderblue;
-		display: flex;
+		margin: 0.2%;
 	}
 
 	#navbar-item {
-		background-color: grey;
-		flex: 1;
 		padding: 0.2%;
+		margin-left: 10%;
+		margin-right: 10%;
+		margin-top: 1%;
+		margin-bottom: 1%;
+		display: flex;
+  	justify-content: center;
+  	align-items: center;
 	}
+	.sidenav {
+		height: 100%; /* Full-height: remove this if you want "auto" height */
+		width: 160px; /* Set the width of the sidebar */
+		position: fixed; /* Fixed Sidebar (stay in place on scroll) */
+		z-index: 1; /* Stay on top */
+		top: 0; /* Stay at the top */
+		left: 0;
+		background-color: #111; /* Black */
+		overflow-x: hidden; /* Disable horizontal scroll */
+		padding-top: 20px;
+	}
+
 	</style>
 }

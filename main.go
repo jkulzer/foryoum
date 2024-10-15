@@ -27,12 +27,31 @@ func main() {
 
 	customContent, err := os.ReadFile("./custom.html")
 	if err != nil {
-		fmt.Println("No custom content detected.")
+		fmt.Println("No custom content detected")
+	}
+	mainPage, err := os.ReadFile("./mainPage.html")
+	if err != nil {
+		fmt.Println("No main page set up! This will confuse users")
 	}
 
-	routes.Router(r, env, string(customContent))
+	attachmentPath := "./attachments"
 
-	http.ListenAndServe(":"+strconv.Itoa(port), r)
+	if _, err := os.Stat(attachmentPath); os.IsNotExist(err) {
+		err := os.Mkdir(attachmentPath, 0755)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("Attachment Folder created successfully")
+	} else {
+		fmt.Println("Attachment Folder already exists")
+	}
+
+	routes.Router(r, env, string(customContent), string(mainPage))
+
+	err = http.ListenAndServe(":"+strconv.Itoa(port), r)
+	if err != nil {
+		panic(err)
+	}
 
 	ticker := time.NewTicker(1 * time.Minute)
 	quit := make(chan struct{})
