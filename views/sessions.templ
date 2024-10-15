@@ -3,19 +3,20 @@ package views
 import (
 	"github.com/jkulzer/foryoum/v2/models"
 	"time"
+	"github.com/jkulzer/foryoum/v2/translations"
 )
 
-templ SessionList(isLoggedIn bool, sessions []models.Session, customContent string) {
+templ SessionList(isLoggedIn bool, sessions []models.Session, customContent string, t translations.Translations) {
 	<script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
 	@CustomContent(customContent)
-	@Navbar()
+	@Navbar(t, isLoggedIn)
 	if isLoggedIn {
-		<h1>Sessions</h1>
+		<h1>{ t.Sessions }</h1>
 		<ul>
 			for _, session := range sessions {
 				<div id="session">
 					<div>
-						Created: { session.CreatedAt.Format(time.RFC822) }
+						{ t.CreatedAt } { session.CreatedAt.Format(time.RFC822) }
 					</div>
 					<div>
 						Token: 
@@ -27,7 +28,7 @@ templ SessionList(isLoggedIn bool, sessions []models.Session, customContent stri
 							hx-trigger="click"
 							hx-target="#session"
 						>
-							Delete
+							{ t.Delete }
 						</button>
 					</div>
 				</div>

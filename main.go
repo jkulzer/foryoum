@@ -31,7 +31,7 @@ func main() {
 	}
 	mainPage, err := os.ReadFile("./mainPage.html")
 	if err != nil {
-		fmt.Println("No main page set up! This will confuse users")
+		fmt.Println("No main page set up! This will confuse users. The main page can be created in \"mainPage.html\"")
 	}
 
 	attachmentPath := "./attachments"

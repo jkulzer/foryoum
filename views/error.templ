@@ -1,7 +1,11 @@
 package views
 
-templ GenericError(message string, customContent string) {
+import (
+	"github.com/jkulzer/foryoum/v2/translations"
+)
+
+templ GenericError(message string, customContent string, t translations.Translations, isLoggedIn bool) {
 	@CustomContent(customContent)
-	@Navbar()
+	@Navbar(t, isLoggedIn)
 	<h1>{ message } </h1>
 }

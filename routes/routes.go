@@ -16,6 +16,7 @@ import (
 	"github.com/jkulzer/foryoum/v2/db"
 	"github.com/jkulzer/foryoum/v2/helpers"
 	"github.com/jkulzer/foryoum/v2/models"
+	"github.com/jkulzer/foryoum/v2/translations"
 	"github.com/jkulzer/foryoum/v2/views"
 
 	"github.com/microcosm-cc/bluemonday"
@@ -27,19 +28,23 @@ import (
 
 func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		templ.Handler(views.Main(customContent)).ServeHTTP(w, r)
+		t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+		isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
+		templ.Handler(views.Main(mainPage, customContent, t, isLoggedIn)).ServeHTTP(w, r)
 	})
 	r.Route("/posts", func(r chi.Router) {
 		r.Get("/{index}",
 			func(w http.ResponseWriter, r *http.Request) {
 				index, err := strconv.ParseUint(chi.URLParam(r, "index"), 10, 0)
-				if err != nil {
-					templ.Handler(views.GenericError("Invalid Post range", customContent)).ServeHTTP(w, r)
-				}
 				isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
+				if err != nil {
+					t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+					templ.Handler(views.GenericError(t.InvalidPostRange, customContent, t, isLoggedIn)).ServeHTTP(w, r)
+				}
 
 				posts, lastPage := controllers.GetPostList(env, uint(index))
-				templ.Handler(views.PostView(posts, index, lastPage, isLoggedIn, customContent)).ServeHTTP(w, r)
+				t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+				templ.Handler(views.PostView(posts, index, lastPage, isLoggedIn, customContent, t)).ServeHTTP(w, r)
 			},
 		)
 		r.Get("/",
@@ -48,23 +53,63 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 			},
 		)
 	})
+	r.Route("/language", func(r chi.Router) {
+		r.Post("/",
+			func(w http.ResponseWriter, r *http.Request) {
+				response, err := helpers.ReadHttpResponse(r.Body)
+				if err != nil {
+					fmt.Println("Failed to read HTTP response")
+				}
+				data, err := url.ParseQuery(response)
+				if err != nil {
+					fmt.Println("Failed to parse query")
+				}
+
+				expiryDuration := 1 * time.Hour * 24 * 30
+				expiresAt := time.Now().Add(expiryDuration)
+
+				language := data["language"][0]
+				cookie := http.Cookie{
+					Name:  "Language",
+					Value: language,
+					Path:  "/",
+					// sets the expiry time also used in the session
+					Expires:  expiresAt,
+					HttpOnly: true,
+					Secure:   true,
+					SameSite: http.SameSiteLaxMode,
+				}
+
+				http.SetCookie(w, &cookie)
+
+				// refreshes everything so the language preference gets saved
+				w.Header().Set("HX-Refresh", "true")
+
+				w.WriteHeader(http.StatusNoContent)
+			},
+		)
+	})
 	r.Route("/search", func(r chi.Router) {
 		r.Get("/",
 			func(w http.ResponseWriter, r *http.Request) {
-				templ.Handler(views.SearchPage(customContent)).ServeHTTP(w, r)
+				t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+				isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
+				templ.Handler(views.SearchPage(customContent, t, isLoggedIn)).ServeHTTP(w, r)
 			},
 		)
 		r.Get("/{searchTerm}/{index}",
 			func(w http.ResponseWriter, r *http.Request) {
+				isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
 				searchTerm := chi.URLParam(r, "searchTerm")
 				index, err := strconv.ParseUint(chi.URLParam(r, "index"), 10, 0)
 				if err != nil {
 					fmt.Println("failed parsing")
-					templ.Handler(views.GenericError("Invalid search page", customContent)).ServeHTTP(w, r)
+					t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+					templ.Handler(views.GenericError(t.InvalidSearchRange, customContent, t, isLoggedIn)).ServeHTTP(w, r)
 				}
 				posts, lastPage := controllers.SearchPostList(env, searchTerm, uint(index))
-				fmt.Println("last page " + fmt.Sprint(lastPage))
-				templ.Handler(views.SearchResults(posts, index, lastPage, customContent)).ServeHTTP(w, r)
+				t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+				templ.Handler(views.SearchResults(posts, index, lastPage, customContent, t, isLoggedIn)).ServeHTTP(w, r)
 			},
 		)
 		r.Post("/",
@@ -87,7 +132,9 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 		func(w http.ResponseWriter, r *http.Request) {
 			postID, err := strconv.ParseUint(chi.URLParam(r, "postID"), 10, 0)
 			if err != nil {
-				templ.Handler(views.GenericError("Invalid attachment location "+fmt.Sprint(postID), customContent)).ServeHTTP(w, r)
+				t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+				isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
+				templ.Handler(views.GenericError(t.InvalidAttachmentLocation+fmt.Sprint(postID), customContent, t, isLoggedIn)).ServeHTTP(w, r)
 			}
 			fileName := chi.URLParam(r, "fileName")
 
@@ -101,7 +148,8 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 			func(w http.ResponseWriter, r *http.Request) {
 				err := r.ParseMultipartForm(10 << 20) // Limit file upload size to 10MB
 				if err != nil {
-					http.Error(w, "Failed to parse form data", http.StatusBadRequest)
+					t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+					http.Error(w, t.FailedToParseFormData, http.StatusBadRequest)
 					return
 				}
 
@@ -126,7 +174,8 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 						file, err := fileHeader.Open()
 						if err != nil {
 							env.DB.Delete(&post)
-							templ.Handler(views.Message("Failed to add attachments")).ServeHTTP(w, r)
+							t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+							templ.Handler(views.Message(t.FailedToAddAttachments)).ServeHTTP(w, r)
 							return
 						}
 						defer file.Close()
@@ -137,7 +186,8 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 							err := os.Mkdir(attachmentPath+"/"+fmt.Sprint(post.ID), 0755)
 							if err != nil {
 								env.DB.Delete(&post)
-								templ.Handler(views.Message("Failed to add attachments. Post folder not created")).ServeHTTP(w, r)
+								t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+								templ.Handler(views.Message(t.FailedToAddAttachments)).ServeHTTP(w, r)
 								return
 							}
 						}
@@ -147,7 +197,8 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 						outFile, err := os.Create(filePath)
 						if err != nil {
 							env.DB.Delete(&post)
-							templ.Handler(views.Message("Failed to add attachments. Attachment can't be saved")).ServeHTTP(w, r)
+							t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+							templ.Handler(views.Message(t.FailedToAddAttachments)).ServeHTTP(w, r)
 							return
 						}
 						defer outFile.Close()
@@ -155,7 +206,8 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 						_, err = io.Copy(outFile, file)
 						if err != nil {
 							env.DB.Delete(&post)
-							templ.Handler(views.Message("Failed to add attachments. Attachment can't be saved")).ServeHTTP(w, r)
+							t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+							templ.Handler(views.Message(t.FailedToAddAttachments)).ServeHTTP(w, r)
 							return
 						}
 
@@ -169,7 +221,8 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 					// gets a new session token
 					controllers.RefreshSession(env, w, r)
 
-					templ.Handler(views.Message("Posted sucessfully!")).ServeHTTP(w, r)
+					t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+					templ.Handler(views.Message(t.PostedSucessfully)).ServeHTTP(w, r)
 				}
 			},
 		)
@@ -177,7 +230,8 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 			func(w http.ResponseWriter, r *http.Request) {
 				err := r.ParseMultipartForm(10 << 20) // Limit file upload size to 10MB
 				if err != nil {
-					http.Error(w, "Failed to parse form data", http.StatusBadRequest)
+					t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+					http.Error(w, t.FailedToParseFormData, http.StatusBadRequest)
 					return
 				}
 
@@ -193,28 +247,34 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 				// 10 is base 10 and 0 indicates parsing into system-size int
 				postId, err := strconv.ParseUint(chi.URLParam(r, "postId"), 10, 0)
 				if err != nil {
-					templ.Handler(views.GenericError("Invalid Post ID", customContent)).ServeHTTP(w, r)
+					t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+					isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
+					templ.Handler(views.GenericError(t.InvalidPostID, customContent, t, isLoggedIn)).ServeHTTP(w, r)
 				}
 				templ.Handler(views.RedirectTo("post/"+fmt.Sprint(postId)+"/0")).ServeHTTP(w, r)
 			},
 		)
 		r.Get("/{postId}/{commentIndex}",
 			func(w http.ResponseWriter, r *http.Request) {
+				isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
 				// 10 is base 10 and 0 indicates parsing into system-size int
 				postId, err := strconv.ParseUint(chi.URLParam(r, "postId"), 10, 0)
 				if err != nil {
-					templ.Handler(views.GenericError("Invalid Post ID", customContent)).ServeHTTP(w, r)
+					t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+					templ.Handler(views.GenericError(t.InvalidPostID, customContent, t, isLoggedIn)).ServeHTTP(w, r)
 				}
 
 				var post models.RootPost
 				result := env.DB.First(&post, postId)
 				if result.Error != nil {
-					templ.Handler(views.GenericError("Failed to load posts", customContent)).ServeHTTP(w, r)
+					t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+					templ.Handler(views.GenericError(t.FailedToLoadPosts, customContent, t, isLoggedIn)).ServeHTTP(w, r)
 				} else {
 					comments := controllers.GetCommentList(env, uint(postId))
 					attachments := controllers.GetAttachmentList(env, uint(postId))
 					isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
-					templ.Handler(views.Post(post, comments, attachments, customContent, isLoggedIn)).ServeHTTP(w, r)
+					t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+					templ.Handler(views.Post(post, comments, attachments, customContent, isLoggedIn, t)).ServeHTTP(w, r)
 				}
 			},
 		)
@@ -238,7 +298,8 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 
 					postId, err := strconv.ParseUint(data["rootPostID"][0], 10, 0)
 					if err != nil {
-						templ.Handler(views.GenericError("Invalid Post ID", customContent)).ServeHTTP(w, r)
+						t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+						templ.Handler(views.GenericError(t.InvalidPostID, customContent, t, isLoggedIn)).ServeHTTP(w, r)
 					}
 
 					fmt.Println("Creating a comment with root post id \"" + fmt.Sprint(postId) + "\" and body \"" + data["text"][0])
@@ -258,7 +319,9 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 	r.Route("/register", func(r chi.Router) {
 		r.Get("/",
 			func(w http.ResponseWriter, r *http.Request) {
-				templ.Handler(views.Register(customContent)).ServeHTTP(w, r)
+				isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
+				t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+				templ.Handler(views.Register(customContent, t, isLoggedIn)).ServeHTTP(w, r)
 			},
 		)
 
@@ -287,7 +350,9 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 				// if the user creation fails,
 				if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
 					fmt.Println("Duplicate Username")
-					templ.Handler(views.RegistrationFailed()).ServeHTTP(w, r)
+					t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+					isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
+					templ.Handler(views.GenericError(t.UsernameAlreadyTaken, customContent, t, isLoggedIn)).ServeHTTP(w, r)
 				} else {
 					controllers.CreateSession(env, userName, w)
 				}
@@ -298,7 +363,9 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 		r.Get("/*",
 			func(w http.ResponseWriter, r *http.Request) {
 				redirect := chi.URLParam(r, "*")
-				templ.Handler(views.Login(redirect, customContent)).ServeHTTP(w, r)
+				t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+				isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
+				templ.Handler(views.Login(redirect, customContent, t, isLoggedIn)).ServeHTTP(w, r)
 			},
 		)
 		r.Post("/",
@@ -343,12 +410,15 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 		r.Get("/",
 			func(w http.ResponseWriter, r *http.Request) {
 				isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
-				templ.Handler(views.Logout(isLoggedIn, customContent)).ServeHTTP(w, r)
+				t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+				templ.Handler(views.Logout(isLoggedIn, customContent, t)).ServeHTTP(w, r)
 			},
 		)
 		r.Post("/",
 			func(w http.ResponseWriter, r *http.Request) {
 				controllers.RemoveSession(env, w, r)
+				w.Header().Set("HX-Refresh", "true")
+				w.WriteHeader(http.StatusNoContent)
 			},
 		)
 	})
@@ -359,7 +429,8 @@ func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 
 				sessionList := controllers.GetSessionsForUser(env, r, session)
 
-				templ.Handler(views.SessionList(isLoggedIn, sessionList, customContent)).ServeHTTP(w, r)
+				t := translations.GetTranslations(translations.GetLanguageFromCookie(r))
+				templ.Handler(views.SessionList(isLoggedIn, sessionList, customContent, t)).ServeHTTP(w, r)
 			},
 		)
 		r.Delete("/{session}",

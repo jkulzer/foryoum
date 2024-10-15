@@ -2,28 +2,29 @@ package views
 
 import (
 	"github.com/jkulzer/foryoum/v2/models"
+	"github.com/jkulzer/foryoum/v2/translations"
 )
 
-templ SearchPage(customContent string) {
+templ SearchPage(customContent string, t translations.Translations, isLoggedIn bool) {
 	<script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
 	@CustomContent(customContent)
-	@Navbar()
-	@searchBar()
+	@Navbar(t, isLoggedIn)
+	@searchBar(t)
 }
 
-templ searchBar() {
-	<h3>Search</h3>
+templ searchBar(t translations.Translations) {
+	<h3>{ t.Search }</h3>
 	<form hx-post="/search">
-		<input type="text" name="searchTerm" placeholder="Search for posts..."/>
-		<button type="submit" name="submit">Search</button>
+		<input type="text" name="searchTerm" placeholder={ t.SearchForPosts }/>
+		<button type="submit" name="submit">{ t.SearchAction }</button>
 	</form>
 }
 
-templ SearchResults(posts []models.RootPost, index uint64, lastPage bool, customContent string) {
+templ SearchResults(posts []models.RootPost, index uint64, lastPage bool, customContent string, t translations.Translations, isLoggedIn bool) {
 	@CustomContent(customContent)
-	@Navbar()
-	<h1>Search</h1>
+	@Navbar(t, isLoggedIn)
+	<h1>{ t.Search }</h1>
 	<div id="search-results">
-		@postList(posts, index, lastPage, true)
+		@postList(posts, index, lastPage, true, t)
 	</div>
 }

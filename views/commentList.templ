@@ -2,15 +2,22 @@ package views
 
 import (
 	"github.com/jkulzer/foryoum/v2/models"
+	"github.com/jkulzer/foryoum/v2/translations"
 )
 
-templ commentList(comments []models.Comment) {
+templ commentList(comments []models.Comment, t translations.Translations) {
 	<ul>
 		for _, comment := range comments {
-			<div>
-				{ comment.Body }
-				by user "{ comment.Op }"
+			<div id="comment">
+				{ t.User + " " + comment.Op + " " + t.Says +":" }
+				"{ comment.Body }"
 			</div>
+			<br/>
 		}
 	</ul>
+	<style>
+	#comment {
+		word-wrap: break-word;
+	}
+	</style>
 }

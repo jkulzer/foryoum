@@ -1,16 +1,20 @@
 package views
 
-templ NewPost(isLoggedIn bool) {
+import (
+	"github.com/jkulzer/foryoum/v2/translations"
+)
+
+templ NewPost(isLoggedIn bool, t translations.Translations) {
 	<script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
 	if isLoggedIn {
 		<div>
-			<h1>Go ahead, post</h1>
+			<h1>{ t.CreateAPost }</h1>
 			<form
 				hx-post="/post"
 				hx-swap="afterbegin"
 				hx-encoding="multipart/form-data"
 			>
-				<input id="title" name="title" type="text" placeholder="Title"/>
+				<input id="title" name="title" type="text" placeholder={ t.Title }/>
 				<br/>
 				<textarea
 					rows="5"
@@ -21,16 +25,16 @@ templ NewPost(isLoggedIn bool) {
 					hx-trigger="keyup changed delay:500ms"
 					hx-target="#post-preview"
 					hx-swap="outerHTML"
-					placeholder="Content"
+					placeholder={ t.Content }
 				></textarea>
 				<br/>
 				<input type="file" id="attachments" name="attachments" multiple/>
-				(filesize limit of 10MB)
+				{ t.FilesizeLimit }
 				<br/>
-				<button type="Post">Submit</button>
+				<button type="Post">{ t.CreatePost }</button>
 			</form>
 		</div>
-		<h3>Preview</h3>
+		<h3>{ t.Preview }</h3>
 		<div id="post-preview-border">
 			<div id="post-preview"></div>
 		</div>

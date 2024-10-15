@@ -1,14 +1,18 @@
 package views
 
-templ Logout(isLoggedIn bool, customContent string) {
+import (
+	"github.com/jkulzer/foryoum/v2/translations"
+)
+
+templ Logout(isLoggedIn bool, customContent string, t translations.Translations) {
 	<script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
 	@CustomContent(customContent)
-	@Navbar()
+	@Navbar(t, isLoggedIn)
 	if isLoggedIn {
 		<div>
-			<h1>Logout</h1>
+			<h1>{ t.Logout }</h1>
 			<form hx-post="/logout">
-				<button type="submit">Logout</button>
+				<button type="submit">{ t.Logout }</button>
 			</form>
 		</div>
 	}

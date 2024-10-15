@@ -1,4 +1,4 @@
-# Setup
+# Setup/Installation
 
 ## Benötigte Software
 
@@ -10,12 +10,30 @@ Wenn Go installiert ist:
 ```
 go install github.com/a-h/templ/cmd/templ@latest
 ```
+
 Mehr Infos:
 https://templ.guide/quick-start/installation
 
+## Kompilierung
 
+```
+go build .
+```
 
-## Ausführen
+## Ausführung
+
+```
+./foryoum
+```
+
+## Konfiguration
+
+Die Datenbank wird in `./sqlite.db` gespeichert. 
+Der Administrator kann in `./mainPage.html` den Inhalt der Startseite beliebig gestalten.
+Die Datei `./custom.html` wird auf jeder Seite ganz oben angezeigt. Dies ist vor allem für custom CSS des Administrators vorgesehen. Vorinstalliert ist ein einfaches CSS-Theme, dies kann jedoch komplett ersetzt oder angepasst werden.
+Anhänge werden in `./attachments` gespeichert.
+
+# Entwickeln
 
 Folgende Befehle ausführen um das Programm neu zu kompilieren und auszuführen:
 

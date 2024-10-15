@@ -2,10 +2,11 @@ package views
 
 import (
 	"github.com/jkulzer/foryoum/v2/models"
+	"github.com/jkulzer/foryoum/v2/translations"
 	"strconv"
 )
 
-templ postList(posts []models.RootPost, index uint64, lastPage bool, pages bool) {
+templ postList(posts []models.RootPost, index uint64, lastPage bool, pages bool, t translations.Translations) {
 	<div id="post-list">
 		<ul>
 			for _, post := range posts {
@@ -17,9 +18,9 @@ templ postList(posts []models.RootPost, index uint64, lastPage bool, pages bool)
 						style="text-decoration:none"
 					>
 						{ post.Title }
-					</a>
-					by user "{ post.Op }"
+					</a> { t.ByUser } "{ post.Op }"
 				</div>
+				<br/>
 			}
 		</ul>
 	</div>
@@ -31,7 +32,7 @@ templ postList(posts []models.RootPost, index uint64, lastPage bool, pages bool)
 					class="button"
 					href={ templ.URL(strconv.FormatUint(uint64(index-1), 10)) }
 					style="text-decoration:none"
-				>Previous </a>
+				>{ t.Previous }</a>
 			}
 			if !lastPage {
 				<a
@@ -40,7 +41,7 @@ templ postList(posts []models.RootPost, index uint64, lastPage bool, pages bool)
 					href={ templ.URL(strconv.FormatUint(uint64(index+1), 10)) }
 					style="text-decoration:none"
 				>
-					Next 
+					{ t.Next }
 				</a>
 			}
 		</div>
@@ -57,6 +58,9 @@ templ postList(posts []models.RootPost, index uint64, lastPage bool, pages bool)
 		#link-navbar {
 			flex: 1;
 			padding: 0.2%;
+		}
+		#link {
+			font-size: 30px;
 		}
 	</style>
 }

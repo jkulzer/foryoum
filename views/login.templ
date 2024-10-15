@@ -1,25 +1,25 @@
 package views
 
 import (
-// "github.com/jkulzer/foryoum/v2/models"
+	"github.com/jkulzer/foryoum/v2/translations"
 )
 
-templ Login(redirect string, customContent string) {
+templ Login(redirect string, customContent string, t translations.Translations, isLoggedIn bool) {
 	<script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
 	@CustomContent(customContent)
-	@Navbar()
-	<h1>Login </h1>
+	@Navbar(t, isLoggedIn)
+	<h1>{ t.Login }</h1>
 	<form
 		hx-post="/login"
 		hx-swap="beforebegin"
 	>
-		<label for="username">Username:</label>
+		<label for="username">{ t.Username }:</label>
 		<br/>
-		<input id="username" name="username" type="text"/>
+		<input id="username" name="username" placeholder={ t.Username } type="text"/>
 		<br/>
-		<label for="password">Password:</label>
+		<label for="password">{ t.Password }:</label>
 		<br/>
-		<input id="password" name="password" type="password"/>
+		<input id="password" name="password" placeholder={ t.Password } type="password"/>
 		<br/>
 		<input type="hidden" id="redirect" name="redirect" value={ redirect }/>
 		<input type="submit" value="Login"/>
