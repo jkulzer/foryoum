@@ -42,7 +42,7 @@ func SearchPostList(env *db.Env, searchTerm string, listIndex uint) ([]models.Ro
 	}
 
 	// only returns false if there is pagination needed
-	if len(posts) == 0 {
+	if len(posts) < 10 {
 		return posts, true
 	}
 
