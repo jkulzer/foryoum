@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"time"
 
@@ -23,11 +25,10 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func Router(r chi.Router, env *db.Env, customContent string) {
+func Router(r chi.Router, env *db.Env, customContent string, mainPage string) {
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		templ.Handler(views.Main(customContent)).ServeHTTP(w, r)
 	})
-
 	r.Route("/posts", func(r chi.Router) {
 		r.Get("/{index}",
 			func(w http.ResponseWriter, r *http.Request) {
@@ -53,67 +54,135 @@ func Router(r chi.Router, env *db.Env, customContent string) {
 				templ.Handler(views.SearchPage(customContent)).ServeHTTP(w, r)
 			},
 		)
+		r.Get("/{searchTerm}/{index}",
+			func(w http.ResponseWriter, r *http.Request) {
+				searchTerm := chi.URLParam(r, "searchTerm")
+				index, err := strconv.ParseUint(chi.URLParam(r, "index"), 10, 0)
+				if err != nil {
+					fmt.Println("failed parsing")
+					templ.Handler(views.GenericError("Invalid search page", customContent)).ServeHTTP(w, r)
+				}
+				posts, lastPage := controllers.SearchPostList(env, searchTerm, uint(index))
+				fmt.Println("last page " + fmt.Sprint(lastPage))
+				templ.Handler(views.SearchResults(posts, index, lastPage, customContent)).ServeHTTP(w, r)
+			},
+		)
 		r.Post("/",
 			func(w http.ResponseWriter, r *http.Request) {
 				response, err := helpers.ReadHttpResponse(r.Body)
 				if err != nil {
 					fmt.Println("Failed to read HTTP response")
 				}
-				index := uint64(0)
 				data, err := url.ParseQuery(response)
 				if err != nil {
 					fmt.Println("Failed to parse query")
 				}
 
 				searchTerm := data["searchTerm"][0]
-				fmt.Println("searching for " + searchTerm)
-				posts, lastPage := controllers.SearchPostList(env, searchTerm)
-				templ.Handler(views.SearchResults(posts, index, lastPage)).ServeHTTP(w, r)
+				templ.Handler(views.RedirectTo("search/"+searchTerm+"/0")).ServeHTTP(w, r)
 			},
 		)
 	})
+	r.Get("/attachments/{postID}/{fileName}",
+		func(w http.ResponseWriter, r *http.Request) {
+			postID, err := strconv.ParseUint(chi.URLParam(r, "postID"), 10, 0)
+			if err != nil {
+				templ.Handler(views.GenericError("Invalid attachment location "+fmt.Sprint(postID), customContent)).ServeHTTP(w, r)
+			}
+			fileName := chi.URLParam(r, "fileName")
+
+			var attachment models.Attachment
+			env.DB.Where(&models.Attachment{PostID: uint(postID), Filename: fileName}).First(&attachment)
+
+			http.ServeFile(w, r, "./attachments/"+fmt.Sprint(postID)+"/"+fileName)
+		})
 	r.Route("/post", func(r chi.Router) {
 		r.Post("/",
 			func(w http.ResponseWriter, r *http.Request) {
-				response, err := helpers.ReadHttpResponse(r.Body)
+				err := r.ParseMultipartForm(10 << 20) // Limit file upload size to 10MB
 				if err != nil {
-					fmt.Println("Failed to read HTTP response")
-				}
-
-				data, err := url.ParseQuery(response)
-				if err != nil {
-					fmt.Println("Failed to parse query")
+					http.Error(w, "Failed to parse form data", http.StatusBadRequest)
+					return
 				}
 
 				isLoggedIn, session := controllers.GetLoginFromSession(env, r)
 				if isLoggedIn {
 					currentTime := time.Now()
-
-					env.DB.Create(&models.RootPost{
-						Title:        data["title"][0],
-						Body:         data["body"][0],
+					post := &models.RootPost{
+						Title:        r.FormValue("title"),
+						Body:         r.FormValue("body"),
 						CreationDate: currentTime,
 						UpdateDate:   currentTime,
 						Op:           session.UserAccount.Name,
-						Version:      1,
-					})
+					}
+
+					result := env.DB.Create(&post)
+					if result.Error != nil {
+						fmt.Println("failed to create post")
+					}
+
+					files := r.MultipartForm.File["attachments"]
+					for _, fileHeader := range files {
+						file, err := fileHeader.Open()
+						if err != nil {
+							env.DB.Delete(&post)
+							templ.Handler(views.Message("Failed to add attachments")).ServeHTTP(w, r)
+							return
+						}
+						defer file.Close()
+
+						attachmentPath := "./attachments"
+
+						if _, err := os.Stat(attachmentPath + "/" + fmt.Sprint(post.ID)); os.IsNotExist(err) {
+							err := os.Mkdir(attachmentPath+"/"+fmt.Sprint(post.ID), 0755)
+							if err != nil {
+								env.DB.Delete(&post)
+								templ.Handler(views.Message("Failed to add attachments. Post folder not created")).ServeHTTP(w, r)
+								return
+							}
+						}
+
+						filePath := attachmentPath + "/" + fmt.Sprint(post.ID) + "/" + fileHeader.Filename
+
+						outFile, err := os.Create(filePath)
+						if err != nil {
+							env.DB.Delete(&post)
+							templ.Handler(views.Message("Failed to add attachments. Attachment can't be saved")).ServeHTTP(w, r)
+							return
+						}
+						defer outFile.Close()
+
+						_, err = io.Copy(outFile, file)
+						if err != nil {
+							env.DB.Delete(&post)
+							templ.Handler(views.Message("Failed to add attachments. Attachment can't be saved")).ServeHTTP(w, r)
+							return
+						}
+
+						// Create the attachment record and associate it with the post
+						attachment := models.Attachment{
+							PostID:   post.ID,
+							Filename: fileHeader.Filename,
+						}
+						env.DB.Create(&attachment)
+					}
 					// gets a new session token
 					controllers.RefreshSession(env, w, r)
+
+					templ.Handler(views.Message("Posted sucessfully!")).ServeHTTP(w, r)
 				}
 			},
 		)
 		r.Post("/preview",
 			func(w http.ResponseWriter, r *http.Request) {
-				response, err := helpers.ReadHttpResponse(r.Body)
+				err := r.ParseMultipartForm(10 << 20) // Limit file upload size to 10MB
 				if err != nil {
-					fmt.Println("Failed to read HTTP response")
+					http.Error(w, "Failed to parse form data", http.StatusBadRequest)
+					return
 				}
 
-				data, err := url.ParseQuery(response)
-				if err != nil {
-					fmt.Println("Failed to parse query")
-				}
-				input := data["body"][0]
+				input := r.FormValue("body")
+
 				unsafe := blackfriday.MarkdownCommon([]byte(input))
 				html := string(bluemonday.UGCPolicy().SanitizeBytes(unsafe))
 				fmt.Fprint(w, "<div id=\"post-preview\">"+html+"</div>")
@@ -142,10 +211,10 @@ func Router(r chi.Router, env *db.Env, customContent string) {
 				if result.Error != nil {
 					templ.Handler(views.GenericError("Failed to load posts", customContent)).ServeHTTP(w, r)
 				} else {
-
 					comments := controllers.GetCommentList(env, uint(postId))
+					attachments := controllers.GetAttachmentList(env, uint(postId))
 					isLoggedIn, _ := controllers.GetLoginFromSession(env, r)
-					templ.Handler(views.Post(post, comments, customContent, isLoggedIn)).ServeHTTP(w, r)
+					templ.Handler(views.Post(post, comments, attachments, customContent, isLoggedIn)).ServeHTTP(w, r)
 				}
 			},
 		)
@@ -179,7 +248,6 @@ func Router(r chi.Router, env *db.Env, customContent string) {
 						CreationDate: currentTime,
 						UpdateDate:   currentTime,
 						Op:           session.UserAccount.Name,
-						Version:      1,
 					})
 					// gets a new session token
 					controllers.RefreshSession(env, w, r)
@@ -262,7 +330,6 @@ func Router(r chi.Router, env *db.Env, customContent string) {
 						password, userAccount.Password,
 					) {
 						controllers.CreateSession(env, userAccount, w)
-						fmt.Println("Redirecting to " + redirect)
 						templ.Handler(views.RedirectTo(redirect)).ServeHTTP(w, r)
 					} else {
 						templ.Handler(views.WrongPassword()).ServeHTTP(w, r)

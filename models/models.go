@@ -15,8 +15,8 @@ type RootPost struct {
 	Body         string
 	CreationDate time.Time
 	UpdateDate   time.Time
+	Attachments  []Attachment `gorm:"foreignKey:PostID"`
 	Op           string
-	Version      int
 }
 
 type Comment struct {
@@ -27,7 +27,12 @@ type Comment struct {
 	CreationDate time.Time
 	UpdateDate   time.Time
 	Op           string
-	Version      int
+}
+
+type Attachment struct {
+	ID       uint `gorm:"primaryKey"`
+	PostID   uint `gorm:"index"` // Foreign key to the Post
+	Filename string
 }
 
 type UserAccount struct {

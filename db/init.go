@@ -23,6 +23,7 @@ func Init() *Env {
 	// create tables for all structs
 	db.AutoMigrate(&models.RootPost{})
 	db.AutoMigrate(&models.Comment{})
+	db.AutoMigrate(&models.Attachment{})
 	db.AutoMigrate(&models.UserAccount{})
 	db.AutoMigrate(&models.Session{})
 
